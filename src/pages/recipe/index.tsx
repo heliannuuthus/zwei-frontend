@@ -3,12 +3,12 @@ import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
   AtSearchBar,
-  AtLoadMore,
   AtMessage,
   AtActivityIndicator,
   AtIcon,
   AtBadge,
   AtFloatLayout,
+  AtRate,
 } from 'taro-ui';
 import {
   getRecipes,
@@ -64,6 +64,7 @@ const Recipe = () => {
 
   // 使用 ref 保存最新的 searchValue
   const searchValueRef = useRef<string>('');
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     searchValueRef.current = searchValue;
   }, [searchValue]);
@@ -193,29 +194,39 @@ const Recipe = () => {
     }
   }, [loadRecipes]);
 
-  // 搜索输入变化
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value);
-  }, []);
-
-  // 执行搜索
-  const handleSearchAction = useCallback(() => {
-    if (!searchValue || searchValue.trim() === '') {
-      Taro.showToast({
-        title: '请输入搜索关键词',
-        icon: 'none',
-      });
-      return;
-    }
-
-    searchValueRef.current = searchValue;
+  // 执行搜索（内部方法）
+  const doSearch = useCallback((value: string) => {
+    searchValueRef.current = value;
     setCategoryData({});
     categoryDataRef.current = {};
-
     setTimeout(() => {
       loadRecipes(currentCategory, true);
     }, 0);
-  }, [currentCategory, searchValue, loadRecipes]);
+  }, [currentCategory, loadRecipes]);
+
+  // 搜索输入变化（带防抖）
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+    
+    // 清除之前的定时器
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+    
+    // 设置新的防抖定时器（500ms）
+    searchTimerRef.current = setTimeout(() => {
+      doSearch(value);
+    }, 500);
+  }, [doSearch]);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, []);
 
   // 跳转到详情页
   const navigateToDetail = useCallback((recipeId: string) => {
@@ -237,34 +248,37 @@ const Recipe = () => {
     }
   }, [currentCategory, loadRecipes]);
 
+  // 格式化菜谱名称（去掉"的做法"后缀）
+  const formatRecipeName = useCallback((name: string) => {
+    return name.replace(/的做法$/, '');
+  }, []);
+
   // 添加到做饭清单
-  const addToCookingList = useCallback((recipe: RecipeListItem, e: any) => {
-    e.stopPropagation();
+  const addToCookingList = useCallback((recipe: RecipeListItem) => {
     const isInList = cookingList.some(item => item.id === recipe.id);
     
-      if (isInList) {
-        // 已在清单中，移除
+    if (isInList) {
+      // 已在清单中，移除
       const newList = cookingList.filter(item => item.id !== recipe.id);
       setCookingList(newList);
-        saveCookingList(newList);
-      } else {
-        // 添加到清单
-        const newItem: CookingListItem = {
-          id: recipe.id,
-          name: recipe.name,
-          image_path: recipe.image_path,
-          category: recipe.category,
-          addedAt: Date.now(),
-        };
+      saveCookingList(newList);
+    } else {
+      // 添加到清单
+      const newItem: CookingListItem = {
+        id: recipe.id,
+        name: formatRecipeName(recipe.name),
+        image_path: recipe.image_path,
+        category: recipe.category,
+        addedAt: Date.now(),
+      };
       const newList = [...cookingList, newItem];
       setCookingList(newList);
-        saveCookingList(newList);
+      saveCookingList(newList);
     }
-  }, [cookingList]);
+  }, [cookingList, formatRecipeName]);
 
   // 从清单移除
-  const removeFromCookingList = useCallback((itemId: string, e: any) => {
-    e.stopPropagation();
+  const removeFromCookingList = useCallback((itemId: string) => {
     setCookingList(prev => {
       const newList = prev.filter(item => item.id !== itemId);
       saveCookingList(newList);
@@ -284,27 +298,36 @@ const Recipe = () => {
       content: '确定要清空做饭清单吗？',
       success: (res) => {
         if (res.confirm) {
-          setCookingList([]);
-          saveCookingList([]);
-          Taro.showToast({
-            title: '已清空',
-            icon: 'success',
-          });
+          // 先关闭浮层，避免组件卸载时事件清理问题
+          setShowCookingList(false);
+          setTimeout(() => {
+            setCookingList([]);
+            saveCookingList([]);
+            Taro.showToast({
+              title: '已清空',
+              icon: 'success',
+            });
+          }, 100);
         }
       },
     });
   }, []);
 
-  // 获取难度显示
-  const getDifficultyText = useCallback((difficulty: number) => {
-    const levels = ['简单', '中等', '困难'];
-    return levels[difficulty - 1] || '未知';
-  }, []);
-
-  // 获取难度颜色
-  const getDifficultyColor = useCallback((difficulty: number) => {
-    const colors = ['#52c41a', '#faad14', '#f5222d'];
-    return colors[difficulty - 1] || '#999';
+  // 获取分类颜色 - 精心设计的配色方案
+  const getCategoryColor = useCallback((category: string) => {
+    const colorMap: Record<string, string> = {
+      '素菜': '#2ecc71',      // 翡翠绿 - 清新自然
+      '荤菜': '#e74c3c',      // 石榴红 - 鲜嫩肉感
+      '主食': '#d35400',      // 南瓜橙 - 谷物温暖
+      '汤': '#e67e22',        // 胡萝卜橙 - 热汤暖意
+      '水产': '#3498db',      // 海洋蓝 - 鲜活海味
+      '甜品': '#e91e63',      // 玫瑰粉 - 甜蜜诱人
+      '饮品': '#00bcd4',      // 青碧色 - 清爽解渴
+      '早餐': '#ff9800',      // 日出橙 - 元气满满
+      '调料': '#795548',      // 咖啡棕 - 调味本色
+      '半成品加工': '#607d8b', // 青灰色 - 简约高效
+    };
+    return colorMap[category] || '#9b59b6'; // 默认紫色
   }, []);
 
   // 初始化加载
@@ -339,9 +362,16 @@ const Recipe = () => {
           <AtSearchBar
             value={searchValue}
             onChange={handleSearchChange}
-            onActionClick={handleSearchAction}
+            onConfirm={() => {
+              if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+              doSearch(searchValue);
+            }}
+            onActionClick={() => {
+              if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+              doSearch(searchValue);
+            }}
             placeholder="搜索菜谱..."
-            showActionButton
+            actionName="搜索"
           />
         </View>
       </View>
@@ -404,76 +434,64 @@ const Recipe = () => {
               {currentCategoryData.recipes.map(recipe => {
                 const inList = isInCookingList(recipe.id);
                 return (
-                  <View
-                    key={recipe.id}
-                    className="recipe-card"
-                    onClick={() => navigateToDetail(recipe.id)}
-                  >
-                    {/* 图片区域 */}
-                    <View className="card-image">
-                      {recipe.image_path ? (
-                        <Image
-                          src={recipe.image_path}
-                          className="image-content"
-                          mode="aspectFill"
-                          lazyLoad
-                        />
-                      ) : (
-                        <View className="image-placeholder">
-                          <Text className="placeholder-emoji">🍽️</Text>
-                        </View>
-                      )}
-                      {/* 难度标签 */}
-                      <View
-                        className="difficulty-badge"
-                        style={{ backgroundColor: getDifficultyColor(recipe.difficulty) }}
-                      >
-                        {getDifficultyText(recipe.difficulty)}
-                      </View>
-                    </View>
-
-                    {/* 信息区域 */}
-                    <View className="card-info">
-                      <View className="info-content">
-                        <Text className="recipe-name">{recipe.name}</Text>
-                        <Text className="recipe-desc" numberOfLines={1}>
-                          {recipe.description || '暂无描述'}
-                        </Text>
-                        <View className="recipe-meta">
-                          {recipe.total_time_minutes && (
-                            <View className="meta-item">
-                              <AtIcon value="clock" size="12" color="#999" />
-                              <Text className="meta-text">{recipe.total_time_minutes}分钟</Text>
-                            </View>
-                          )}
-                          <View className="meta-item">
-                            <AtIcon value="tag" size="12" color="#999" />
-                            <Text className="meta-text">{recipe.category}</Text>
-                          </View>
-                        </View>
-                        {/* 标签 */}
-                        {recipe.tags && recipe.tags.length > 0 && (
-                          <View className="recipe-tags">
-                            {recipe.tags.slice(0, 2).map((tag, idx) => (
-                              <Text key={idx} className="tag">{tag}</Text>
-                            ))}
-                            {recipe.tags.length > 2 && (
-                              <Text className="tag more">+{recipe.tags.length - 2}</Text>
-                            )}
+                  <View key={recipe.id} className="recipe-card">
+                    {/* 可点击区域 */}
+                    <View
+                      className="card-clickable"
+                      onClick={() => navigateToDetail(recipe.id)}
+                    >
+                      {/* 图片区域 */}
+                      <View className="card-image">
+                        {recipe.image_path ? (
+                          <Image
+                            src={recipe.image_path}
+                            className="image-content"
+                            mode="aspectFill"
+                            lazyLoad
+                          />
+                        ) : (
+                          <View className="image-placeholder">
+                            <Text className="placeholder-emoji">🍽️</Text>
                           </View>
                         )}
                       </View>
-                      {/* 添加到清单按钮 - 右下角 */}
-                      <View
-                        className={`add-to-list-btn ${inList ? 'in-list' : ''}`}
-                        onClick={(e) => addToCookingList(recipe, e)}
-                      >
-                        <AtIcon
-                          value={inList ? 'check' : 'add'}
-                          size="20"
-                          color="#fff"
-                        />
+
+                      {/* 信息区域 */}
+                      <View className="card-info">
+                        <Text className="recipe-name">{formatRecipeName(recipe.name)}</Text>
+                        <View className="recipe-meta">
+                          {/* 难度 */}
+                          <View className="meta-item difficulty-item">
+                            <Text className="meta-label">难度：</Text>
+                            <AtRate value={recipe.difficulty} max={3} size={10} />
+                          </View>
+                          {/* 烹饪时间 */}
+                          {recipe.total_time_minutes && (
+                            <View className="meta-item">
+                              <Text className="meta-label">时间：</Text>
+                              <Text className="meta-text">{recipe.total_time_minutes}分钟</Text>
+                            </View>
+                          )}
+                        </View>
+                        {/* 分类标签 */}
+                        <View
+                          className="category-badge"
+                          style={{ backgroundColor: getCategoryColor(recipe.category) }}
+                        >
+                          {recipe.category}
+                        </View>
                       </View>
+                    </View>
+                    {/* 添加到清单按钮 - 独立区域 */}
+                    <View
+                      className={`add-to-list-btn ${inList ? 'in-list' : ''}`}
+                      onClick={() => addToCookingList(recipe)}
+                    >
+                      <AtIcon
+                        value={inList ? 'check' : 'add'}
+                        size="14"
+                        color="#fff"
+                      />
                     </View>
                   </View>
                 );
@@ -483,24 +501,28 @@ const Recipe = () => {
 
           {/* 加载更多 */}
           {currentCategoryData.loading && currentCategoryData.recipes.length > 0 && (
-            <AtLoadMore status="loading" />
+            <View className="list-footer loading">
+              <AtActivityIndicator size={24} />
+              <Text className="footer-text">加载中</Text>
+            </View>
           )}
           {!currentCategoryData.hasMore && currentCategoryData.recipes.length > 0 && (
-            <AtLoadMore status="noMore" noMoreText="没有更多了" />
+            <View className="list-footer no-more">
+              <View className="footer-line" />
+              <Text className="footer-text">已经到底啦</Text>
+              <View className="footer-line" />
+            </View>
           )}
         </ScrollView>
       </View>
 
-      {/* 悬浮购物车按钮 */}
+      {/* 悬浮清单按钮 */}
       <View className="floating-cart-btn" onClick={() => setShowCookingList(true)}>
         <AtBadge value={cookingList.length > 0 ? cookingList.length : ''}>
           <View className="cart-icon-wrapper">
-            <AtIcon value="shopping-cart" size="28" color="#fff" />
+            <AtIcon value="shopping-bag" size="22" color="#fff" />
           </View>
         </AtBadge>
-        {cookingList.length > 0 && (
-          <Text className="cart-label">做饭清单</Text>
-        )}
       </View>
 
       {/* 做饭清单浮层 */}
@@ -520,36 +542,42 @@ const Recipe = () => {
             <>
               <View className="cooking-header">
                 <Text className="cooking-count">共 {cookingList.length} 道菜</Text>
-                <Text className="clear-btn" onClick={clearCookingList}>清空</Text>
+                <View className="clear-btn" onClick={clearCookingList}>
+                  <Text>清空</Text>
+                </View>
               </View>
               <ScrollView className="cooking-scroll" scrollY>
                 {cookingList.map(item => (
                   <View
                     key={item.id}
                     className="cooking-item"
-                    onClick={() => {
-                      setShowCookingList(false);
-                      navigateToDetail(item.id);
-                    }}
                   >
-                    <View className="cooking-item-image">
-                      {item.image_path ? (
-                        <Image
-                          src={item.image_path}
-                          className="cooking-image"
-                          mode="aspectFill"
-                        />
-                      ) : (
-                        <View className="cooking-image-placeholder">🍽️</View>
-                      )}
-                    </View>
-                    <View className="cooking-item-info">
-                      <Text className="cooking-item-name">{item.name}</Text>
-                      <Text className="cooking-item-category">{item.category}</Text>
+                    <View
+                      className="cooking-item-content"
+                      onClick={() => {
+                        setShowCookingList(false);
+                        navigateToDetail(item.id);
+                      }}
+                    >
+                      <View className="cooking-item-image">
+                        {item.image_path ? (
+                          <Image
+                            src={item.image_path}
+                            className="cooking-image"
+                            mode="aspectFill"
+                          />
+                        ) : (
+                          <View className="cooking-image-placeholder">🍽️</View>
+                        )}
+                      </View>
+                      <View className="cooking-item-info">
+                        <Text className="cooking-item-name">{item.name}</Text>
+                        <Text className="cooking-item-category">{item.category}</Text>
+                      </View>
                     </View>
                     <View
                       className="cooking-item-remove"
-                      onClick={(e) => removeFromCookingList(item.id, e)}
+                      onClick={() => removeFromCookingList(item.id)}
                     >
                       <AtIcon value="close" size="16" color="#999" />
                     </View>

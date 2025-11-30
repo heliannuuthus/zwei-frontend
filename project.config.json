@@ -1,5 +1,5 @@
 {
-  "miniprogramRoot": "dist",
+  "miniprogramRoot": "dist/",
   "projectname": "myApp",
   "description": "烹饪项目",
   "appid": "wxe26f0b5a99b12e96",
@@ -44,5 +44,6 @@
     "ignore": [],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.11.1"
 }

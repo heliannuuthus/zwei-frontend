@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, Image } from '@tarojs/components';
+import { View, Text, ScrollView, Image, RichText } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { AtMessage, AtLoadMore } from 'taro-ui';
+import { AtMessage, AtLoadMore, AtTag } from 'taro-ui';
 import { getRecipeDetail, RecipeDetail } from '../../services/recipe';
 // 组件样式通过 babel-plugin-import 自动按需导入
 import './detail.scss';
@@ -10,16 +10,14 @@ const RecipeDetailPage = () => {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // 获取难度显示
-  const getDifficultyText = useCallback((difficulty: number) => {
-    const levels = ['简单', '中等', '困难'];
-    return levels[difficulty - 1] || '未知';
-  }, []);
-
-  // 获取难度颜色
-  const getDifficultyColor = useCallback((difficulty: number) => {
-    const colors = ['#52c41a', '#faad14', '#ff4d4f'];
-    return colors[difficulty - 1] || '#999999';
+  // 获取难度配置
+  const getDifficultyConfig = useCallback((difficulty: number) => {
+    const configs = [
+      { text: '简单', color: '#52c41a' },
+      { text: '中等', color: '#faad14' },
+      { text: '困难', color: '#ff4d4f' },
+    ];
+    return configs[difficulty - 1] || null;
   }, []);
 
   // 加载菜谱详情
@@ -96,30 +94,32 @@ const RecipeDetailPage = () => {
         {/* 基本信息 */}
         <View className="recipe-header">
           <Text className="recipe-title">{recipe.name}</Text>
-          <Text className="recipe-description">{recipe.description}</Text>
+          
+          {recipe.description && (
+            <RichText
+              className="recipe-description"
+              nodes={recipe.description}
+            />
+          )}
 
-          <View className="recipe-meta-info">
-            <View className="meta-item">
-              <Text className="meta-label">难度</Text>
-              <Text
-                className="meta-value"
-                style={{ color: getDifficultyColor(recipe.difficulty) }}
+          {/* 基本信息标签 */}
+          <View className="info-tags">
+            {getDifficultyConfig(recipe.difficulty) && (
+              <AtTag
+                size="small"
+                circle
+                customStyle={{
+                  backgroundColor: getDifficultyConfig(recipe.difficulty)!.color,
+                  color: '#fff',
+                  borderColor: getDifficultyConfig(recipe.difficulty)!.color,
+                }}
               >
-                {getDifficultyText(recipe.difficulty)}
-              </Text>
-            </View>
-            {recipe.total_time_minutes && (
-              <View className="meta-item">
-                <Text className="meta-label">时长</Text>
-                <Text className="meta-value">
-                  {recipe.total_time_minutes}分钟
-                </Text>
-              </View>
+                {getDifficultyConfig(recipe.difficulty)!.text}
+              </AtTag>
             )}
-            <View className="meta-item">
-              <Text className="meta-label">份量</Text>
-              <Text className="meta-value">{recipe.servings}人份</Text>
-            </View>
+            <AtTag size="small" circle>
+              {recipe.servings}人份
+            </AtTag>
           </View>
 
           {/* 标签 */}
@@ -166,22 +166,6 @@ const RecipeDetailPage = () => {
             ))}
           </View>
         </View>
-
-        {/* 小贴士 */}
-        {recipe.additional_notes.length > 0 && (
-          <View className="section">
-            <View className="section-header">
-              <Text className="section-title">💡 小贴士</Text>
-            </View>
-            <View className="notes-list">
-              {recipe.additional_notes.map((note, index) => (
-                <View key={index} className="note-item">
-                  <Text className="note-text">{note}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
 
         {/* 底部间距 */}
         <View className="bottom-spacer" />
