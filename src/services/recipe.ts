@@ -61,9 +61,15 @@ export async function getRecipes(params?: {
   return request<RecipeListItem[]>(url);
 }
 
-// 获取所有分类
-export async function getCategories(): Promise<string[]> {
-  return request<string[]>('/api/recipes/categories/list');
+// 分类响应类型
+export interface Category {
+  key: string; // 分类标识符，如 "meat_dish"
+  label: string; // 中文名称，如 "肉类"
+}
+
+// 获取所有分类（含中文名称和数量）
+export async function getCategories(): Promise<Category[]> {
+  return request<Category[]>('/api/recipes/categories/list');
 }
 
 // 获取菜谱详情

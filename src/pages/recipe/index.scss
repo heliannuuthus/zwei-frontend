@@ -177,34 +177,28 @@ $card-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
       margin-bottom: 8rpx;
     }
 
-    .recipe-meta {
+    .recipe-meta,
+    .recipe-difficulty {
       display: flex;
       align-items: center;
-      gap: 16rpx;
-      margin-bottom: 12rpx;
-      flex-wrap: wrap;
+      gap: 4rpx;
+      margin-bottom: 8rpx;
 
-      .meta-item {
+      .meta-label {
+        font-size: 20rpx;
+        color: $text-hint;
+      }
+
+      .meta-text {
+        font-size: 20rpx;
+        color: $text-primary;
+      }
+    }
+
+    .recipe-difficulty {
+      .at-rate {
         display: flex;
         align-items: center;
-        gap: 4rpx;
-
-        .meta-label {
-          font-size: 20rpx;
-          color: $text-hint;
-        }
-
-        .meta-text {
-          font-size: 20rpx;
-          color: $text-primary;
-        }
-
-        &.difficulty-item {
-          .at-rate {
-            display: flex;
-            align-items: center;
-          }
-        }
       }
     }
 
@@ -461,7 +455,6 @@ $card-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
       box-sizing: border-box;
     }
   }
-
 }
 
 @keyframes float-in {
@@ -474,7 +467,6 @@ $card-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
     transform: translateY(0) scale(1);
   }
 }
-
 
 // 覆盖 taro-ui 搜索栏样式
 .at-search-bar {

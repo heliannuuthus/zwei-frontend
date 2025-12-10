@@ -19,13 +19,38 @@
   border-bottom: 1rpx solid #f0f0f0;
 }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+
 .recipe-title {
   font-size: 44rpx;
   font-weight: 600;
   color: #000000;
   line-height: 1.4;
-  display: block;
-  margin-bottom: 16rpx;
+  flex: 1;
+}
+
+.recipe-difficulty {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+
+  .difficulty-label {
+    font-size: 24rpx;
+    color: #000000;
+    font-weight: 600;
+  }
+
+  .at-rate {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .info-tags {
@@ -74,11 +99,11 @@
 }
 
 .tag {
-  font-size: 24rpx;
-  color: #666666;
-  padding: 8rpx 16rpx;
+  font-size: 20rpx;
+  color: #999999;
+  padding: 6rpx 12rpx;
   background: #f5f5f5;
-  border-radius: 8rpx;
+  border-radius: 6rpx;
 }
 
 .section {
@@ -94,6 +119,12 @@
   margin-bottom: 32rpx;
 }
 
+.section-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+}
+
 .section-title {
   font-size: 36rpx;
   font-weight: 600;
@@ -105,68 +136,256 @@
   color: #999999;
 }
 
-.ingredients-list {
+// 小贴士按钮
+.tips-btn {
   display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
-.ingredient-item {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
+  gap: 8rpx;
+  padding: 12rpx 24rpx;
+  background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+  border-radius: 32rpx;
+  border: 1rpx solid #ffe58f;
 
-  &:last-child {
-    border-bottom: none;
+  &:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+
+  .tips-btn-icon {
+    font-size: 28rpx;
+  }
+
+  .tips-btn-text {
+    font-size: 24rpx;
+    color: #d48806;
+    font-weight: 500;
   }
 }
 
-.ingredient-name {
-  font-size: 30rpx;
-  color: #000000;
-  flex: 1;
+// 食材区域
+.ingredients-section {
+  background: linear-gradient(180deg, #f8fffe 0%, #f0faf8 100%);
 }
 
-.ingredient-quantity {
-  font-size: 28rpx;
-  color: #666666;
-  margin-left: 20rpx;
+.ingredients-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
 }
 
-.steps-list {
+.ingredient-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #e8f4f2;
+  position: relative;
+  overflow: hidden;
+
+  // 顶部装饰线
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4rpx;
+    background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  }
+
+  // 交替颜色
+  &:nth-child(3n + 2)::before {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  }
+
+  &:nth-child(3n)::before {
+    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  // 长内容单独占一行
+  &.wide {
+    grid-column: span 2;
+  }
+
+  .ingredient-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12rpx;
+    flex-wrap: wrap;
+  }
+
+  .ingredient-name {
+    font-size: 28rpx;
+    color: #1a1a1a;
+    font-weight: 600;
+    line-height: 1.4;
+    min-width: 0;
+    word-break: break-all;
+  }
+
+  .ingredient-quantity {
+    font-size: 24rpx;
+    color: #fff;
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    padding: 6rpx 16rpx;
+    border-radius: 20rpx;
+    font-weight: 500;
+    flex-shrink: 0;
+    max-width: 100%;
+    word-break: break-all;
+  }
+
+  &:nth-child(3n + 2) .ingredient-quantity {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  &:nth-child(3n) .ingredient-quantity {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .ingredient-notes {
+    display: block;
+    margin-top: 12rpx;
+    font-size: 22rpx;
+    color: #888;
+    line-height: 1.5;
+    padding-top: 12rpx;
+    border-top: 1rpx dashed #eee;
+  }
+}
+
+// 步骤区域
+.steps-section {
+  background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+}
+
+.steps-timeline {
+  padding: 0 8rpx;
+
+  // 覆盖 AtTimeline 默认样式
+  .at-timeline {
+    padding: 0;
+
+    .at-timeline-item {
+      padding-bottom: 40rpx;
+
+      &:last-child {
+        padding-bottom: 0;
+
+        .at-timeline-item__tail {
+          display: none;
+        }
+      }
+    }
+
+    // 时间轴线条
+    .at-timeline-item__tail {
+      left: 22rpx;
+      border-left: 3rpx dashed #e8e8e8;
+      background: none;
+    }
+
+    // 时间轴圆点
+    .at-timeline-item__dot {
+      width: 44rpx;
+      height: 44rpx;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.3);
+      border: none;
+
+      &::after {
+        content: '';
+        width: 16rpx;
+        height: 16rpx;
+        background: #ffffff;
+        border-radius: 50%;
+      }
+    }
+
+    // 隐藏空标题
+    .at-timeline-item__content-item--title {
+      display: none;
+    }
+
+    // 内容区域
+    .at-timeline-item__content {
+      margin-left: 24rpx;
+      padding: 24rpx;
+      background: #ffffff;
+      border-radius: 16rpx;
+      box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+      border: 1rpx solid #f0f0f0;
+      margin-top: 0;
+    }
+  }
+}
+
+// 步骤内容
+.timeline-step-content {
+  .step-main-text {
+    font-size: 28rpx;
+    color: #333333;
+    line-height: 1.8;
+    display: block;
+  }
+
+  // 行内提示 - 简洁优雅
+  .step-inline-tip {
+    display: block;
+    margin-top: 16rpx;
+    font-size: 24rpx;
+    color: #ff9500;
+    font-style: italic;
+    line-height: 1.5;
+    padding-left: 4rpx;
+  }
+}
+
+// 小贴士浮层内容
+.tips-float-content {
+  padding: 24rpx;
+  max-height: 600rpx;
+  overflow-y: auto;
+}
+
+.tips-float-item {
   display: flex;
-  flex-direction: column;
-  gap: 32rpx;
-}
-
-.step-item {
-  display: flex;
-  gap: 24rpx;
   align-items: flex-start;
-}
+  gap: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  background: linear-gradient(135deg, #fefefe 0%, #f9f9f9 100%);
+  border-radius: 16rpx;
+  border-left: 4rpx solid #ffc107;
 
-.step-number {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  background: #000000;
-  color: #ffffff;
-  font-size: 28rpx;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
+  &:last-child {
+    margin-bottom: 0;
+  }
 
-.step-description {
-  flex: 1;
-  font-size: 30rpx;
-  color: #333333;
-  line-height: 1.8;
-  padding-top: 8rpx;
+  .tips-float-number {
+    width: 40rpx;
+    height: 40rpx;
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+    color: #fff;
+    font-size: 24rpx;
+    font-weight: 600;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tips-float-text {
+    font-size: 28rpx;
+    color: #444444;
+    line-height: 1.7;
+    flex: 1;
+  }
 }
 
 .notes-list {

@@ -1,24 +1,68 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Image, RichText } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { AtMessage, AtLoadMore, AtTag } from 'taro-ui';
+import {
+  AtMessage,
+  AtLoadMore,
+  AtTag,
+  AtRate,
+  AtTimeline,
+  AtFloatLayout,
+} from 'taro-ui';
 import { getRecipeDetail, RecipeDetail } from '../../services/recipe';
+import { getCategoryColor, getCategoryLabel } from '../../utils/category';
 // 组件样式通过 babel-plugin-import 自动按需导入
 import './detail.scss';
+
+// 步骤颜色配置 - AtTimeline 支持的颜色
+const STEP_COLORS: Array<'blue' | 'green' | 'red' | 'yellow'> = [
+  'blue',
+  'green',
+  'red',
+  'yellow',
+];
+
+// 解析步骤描述，分离主要内容和提示
+const parseStepDescription = (description: string) => {
+  const tipIndex = description.indexOf('\n\n💡');
+  if (tipIndex !== -1) {
+    const content = description.substring(0, tipIndex).trim();
+    const tipPart = description.substring(tipIndex + 2).trim();
+    // 移除 "💡 提示：" 或 "💡提示:" 前缀
+    const tip = tipPart.replace(/^💡\s*提示[：:]\s*/, '').trim();
+    return { content, tip };
+  }
+  return { content: description, tip: null };
+};
 
 const RecipeDetailPage = () => {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showTips, setShowTips] = useState<boolean>(false);
 
-  // 获取难度配置
-  const getDifficultyConfig = useCallback((difficulty: number) => {
-    const configs = [
-      { text: '简单', color: '#52c41a' },
-      { text: '中等', color: '#faad14' },
-      { text: '困难', color: '#ff4d4f' },
-    ];
-    return configs[difficulty - 1] || null;
-  }, []);
+  // 将步骤转换为 Timeline 格式
+  const timelineItems = useMemo(() => {
+    if (!recipe) return [];
+
+    return recipe.steps.map((step, index) => {
+      const { content, tip } = parseStepDescription(step.description);
+      const color = STEP_COLORS[index % STEP_COLORS.length];
+
+      // content 需要是 ReactNode[] 数组，提示以行内标签形式展示
+      const contentNodes = [
+        <View key="content" className="timeline-step-content">
+          <Text className="step-main-text">{content}</Text>
+          {tip && <Text className="step-inline-tip">💡 {tip}</Text>}
+        </View>,
+      ];
+
+      return {
+        title: '', // 移除标题
+        content: contentNodes,
+        color,
+      };
+    });
+  }, [recipe]);
 
   // 加载菜谱详情
   const loadRecipeDetail = useCallback(async (recipeId: string) => {
@@ -93,8 +137,15 @@ const RecipeDetailPage = () => {
 
         {/* 基本信息 */}
         <View className="recipe-header">
-          <Text className="recipe-title">{recipe.name}</Text>
-          
+          {/* 标题行：左边标题，右边难度 */}
+          <View className="title-row">
+            <Text className="recipe-title">{recipe.name}</Text>
+            <View className="recipe-difficulty">
+              <Text className="difficulty-label">难度：</Text>
+              <AtRate value={recipe.difficulty} max={5} size={12} />
+            </View>
+          </View>
+
           {recipe.description && (
             <RichText
               className="recipe-description"
@@ -104,68 +155,93 @@ const RecipeDetailPage = () => {
 
           {/* 基本信息标签 */}
           <View className="info-tags">
-            {getDifficultyConfig(recipe.difficulty) && (
-              <AtTag
-                size="small"
-                circle
-                customStyle={{
-                  backgroundColor: getDifficultyConfig(recipe.difficulty)!.color,
-                  color: '#fff',
-                  borderColor: getDifficultyConfig(recipe.difficulty)!.color,
-                }}
-              >
-                {getDifficultyConfig(recipe.difficulty)!.text}
-              </AtTag>
-            )}
+            <AtTag
+              size="small"
+              circle
+              customStyle={{
+                backgroundColor: getCategoryColor(recipe.category),
+                color: '#fff',
+                borderColor: getCategoryColor(recipe.category),
+              }}
+            >
+              {getCategoryLabel(recipe.category)}
+            </AtTag>
             <AtTag size="small" circle>
               {recipe.servings}人份
             </AtTag>
           </View>
-
-          {/* 标签 */}
-          {recipe.tags.length > 0 && (
-            <View className="recipe-tags">
-              {recipe.tags.map((tag, index) => (
-                <Text key={index} className="tag">
-                  {tag}
-                </Text>
-              ))}
-            </View>
-          )}
         </View>
 
         {/* 食材清单 */}
-        <View className="section">
+        <View className="section ingredients-section">
           <View className="section-header">
             <Text className="section-title">📋 食材清单</Text>
-            <Text className="section-subtitle">{recipe.servings}人份</Text>
+            <Text className="section-subtitle">
+              {recipe.ingredients.length} 种食材 · {recipe.servings}人份
+            </Text>
           </View>
-          <View className="ingredients-list">
-            {recipe.ingredients.map((ingredient, index) => (
-              <View key={index} className="ingredient-item">
-                <Text className="ingredient-name">{ingredient.name}</Text>
-                <Text className="ingredient-quantity">
-                  {ingredient.text_quantity}
-                </Text>
-              </View>
-            ))}
+          <View className="ingredients-grid">
+            {recipe.ingredients.map((ingredient, index) => {
+              // 内容过长时单独占一行
+              const isWide =
+                ingredient.name.length + ingredient.text_quantity.length > 12 ||
+                (ingredient.notes && ingredient.notes.length > 10);
+              return (
+                <View
+                  key={index}
+                  className={`ingredient-card ${isWide ? 'wide' : ''}`}
+                >
+                  <View className="ingredient-header">
+                    <Text className="ingredient-name">{ingredient.name}</Text>
+                    <Text className="ingredient-quantity">
+                      {ingredient.text_quantity}
+                    </Text>
+                  </View>
+                  {ingredient.notes && (
+                    <Text className="ingredient-notes">{ingredient.notes}</Text>
+                  )}
+                </View>
+              );
+            })}
           </View>
         </View>
 
         {/* 制作步骤 */}
-        <View className="section">
+        <View className="section steps-section">
           <View className="section-header">
-            <Text className="section-title">👨‍🍳 制作步骤</Text>
+            <View className="section-title-row">
+              <Text className="section-title">👨‍🍳 制作步骤</Text>
+              <Text className="section-subtitle">
+                共 {recipe.steps.length} 步
+              </Text>
+            </View>
+            {recipe.additional_notes && recipe.additional_notes.length > 0 && (
+              <View className="tips-btn" onClick={() => setShowTips(true)}>
+                <Text className="tips-btn-icon">💡</Text>
+                <Text className="tips-btn-text">小贴士</Text>
+              </View>
+            )}
           </View>
-          <View className="steps-list">
-            {recipe.steps.map(step => (
-              <View key={step.step} className="step-item">
-                <View className="step-number">{step.step}</View>
-                <Text className="step-description">{step.description}</Text>
+          <View className="steps-timeline">
+            <AtTimeline items={timelineItems} />
+          </View>
+        </View>
+
+        {/* 小贴士浮层 */}
+        <AtFloatLayout
+          isOpened={showTips}
+          title="📝 烹饪小贴士"
+          onClose={() => setShowTips(false)}
+        >
+          <View className="tips-float-content">
+            {recipe.additional_notes?.map((note, index) => (
+              <View key={index} className="tips-float-item">
+                <View className="tips-float-number">{index + 1}</View>
+                <Text className="tips-float-text">{note}</Text>
               </View>
             ))}
           </View>
-        </View>
+        </AtFloatLayout>
 
         {/* 底部间距 */}
         <View className="bottom-spacer" />
