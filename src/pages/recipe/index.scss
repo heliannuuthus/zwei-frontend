@@ -1,12 +1,14 @@
-// 变量定义
-$primary-color: #ff6b35;
-$primary-light: #fff0eb;
+// 更有食欲的暖色系配色
+$primary-color: #e8503a; // 番茄红
+$primary-light: #fff5f0;
+$primary-warm: #f4a261; // 沙滩橙
+$accent-yellow: #f39c12; // 芥末黄
 $text-primary: #1a1a1a;
 $text-secondary: #666;
 $text-hint: #999;
 $border-color: #f0f0f0;
 $bg-color: #f5f5f5;
-$card-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+$card-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.08);
 
 .recipe-page {
   height: 100vh;
@@ -144,7 +146,7 @@ $card-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
     .image-placeholder {
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
+      background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -420,12 +422,13 @@ $card-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
   .cart-icon-wrapper {
     width: 80rpx;
     height: 80rpx;
-    background: linear-gradient(135deg, $primary-color 0%, #ff8f6b 100%);
+    background: linear-gradient(135deg, $primary-color 0%, $primary-warm 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6rpx 20rpx rgba(232, 80, 58, 0.35);
   }
 
   &:active {

@@ -1,13 +1,19 @@
+// 更有食欲的暖色系配色
+$primary-color: #e8503a; // 番茄红
+$primary-light: #f4a261; // 沙滩橙
+$primary-warm: #d35400; // 焦糖棕
+$accent-yellow: #f39c12; // 芥末黄
+
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #fff8f5 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #fff9f5 0%, #ffffff 100%);
 }
 
 // Banner 区域
 .banner-section {
   position: relative;
   height: 400rpx;
-  background: linear-gradient(135deg, #ff6b35 0%, #ff8e53 100%);
+  background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,7 +54,7 @@
   background: #fff;
   margin: 0 20rpx 30rpx;
   border-radius: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4rpx 20rpx rgba(232, 80, 58, 0.08);
 
   .action-item {
     display: flex;
@@ -67,15 +73,15 @@
       transition: transform 0.3s;
 
       &.recommend-icon {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, $primary-color 0%, #ff7b5a 100%);
       }
 
       &.recipe-icon {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, $primary-light 0%, $accent-yellow 100%);
       }
 
       &.takeout-icon {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        background: linear-gradient(135deg, $primary-warm 0%, $primary-light 100%);
       }
     }
 
@@ -212,7 +218,7 @@
 
         .recipe-time {
           font-size: 22rpx;
-          color: #ff6b35;
+          color: $primary-color;
         }
       }
     }

@@ -10,15 +10,15 @@ export default defineAppConfig({
   ],
   window: {
     backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#FF6B35',
+    navigationBarBackgroundColor: '#E8503A',
     navigationBarTitleText: 'Choosy',
     navigationBarTextStyle: 'white',
-    backgroundColor: '#FFF8F5',
+    backgroundColor: '#FFF9F5',
   },
   lazyCodeLoading: 'requiredComponents',
   tabBar: {
     color: '#999999',
-    selectedColor: '#FF6B35',
+    selectedColor: '#E8503A',
     backgroundColor: '#ffffff',
     borderStyle: 'black',
     list: [

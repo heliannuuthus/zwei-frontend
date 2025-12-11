@@ -6,19 +6,19 @@ import type { Category } from '../services/recipe';
  * 使用英文 key 作为映射键，支持 API 返回的分类标识
  */
 export const CATEGORY_COLORS: Record<string, string> = {
-  vegetable_dish: '#2ecc71', // 翡翠绿 - 素菜
-  meat_dish: '#e74c3c', // 石榴红 - 肉类
+  vegetable_dish: '#27ae60', // 青翠绿 - 素菜
+  meat_dish: '#e8503a', // 番茄红 - 肉类
   staple: '#d35400', // 南瓜橙 - 主食
-  soup: '#e67e22', // 胡萝卜橙 - 汤类
-  aquatic: '#3498db', // 海洋蓝 - 水产
-  drink: '#00bcd4', // 青碧色 - 饮品
-  breakfast: '#ff9800', // 日出橙 - 早餐
-  condiment: '#795548', // 咖啡棕 - 调味品
-  'semi-finished': '#607d8b', // 青灰色 - 半成品
+  soup: '#f4a261', // 沙滩橙 - 汤类
+  aquatic: '#2980b9', // 深海蓝 - 水产
+  drink: '#16a085', // 薄荷绿 - 饮品
+  breakfast: '#f39c12', // 芥末黄 - 早餐
+  condiment: '#8d6e63', // 可可棕 - 调味品
+  'semi-finished': '#78909c', // 青灰色 - 半成品
 };
 
 /** 默认分类颜色 */
-export const DEFAULT_CATEGORY_COLOR = '#9b59b6'; // 紫色
+export const DEFAULT_CATEGORY_COLOR = '#e8503a'; // 番茄红
 
 /** 缓存 key */
 const CATEGORIES_CACHE_KEY = 'categories_cache';

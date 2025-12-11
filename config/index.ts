@@ -32,6 +32,10 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
         exclude: ['taro-ui']
       }
     },
+    sass: {
+      // 静默 taro-ui 的 Sass deprecation warnings
+      silenceDeprecations: ['import', 'global-builtin'],
+    },
     mini: {
       postcss: {
         pxtransform: {

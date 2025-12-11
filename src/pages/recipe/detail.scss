@@ -1,3 +1,9 @@
+// 更有食欲的暖色系配色
+$primary-color: #e8503a; // 番茄红
+$primary-light: #f4a261; // 沙滩橙
+$primary-warm: #d35400; // 焦糖棕
+$accent-yellow: #f39c12; // 芥末黄
+
 .recipe-detail-page {
   min-height: 100vh;
   background: #ffffff;
@@ -10,7 +16,7 @@
 .recipe-header-image {
   width: 100%;
   height: 500rpx;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
 }
 
 .recipe-header {
@@ -162,9 +168,9 @@
   }
 }
 
-// 食材区域
+// 食材区域 - 暖色系
 .ingredients-section {
-  background: linear-gradient(180deg, #f8fffe 0%, #f0faf8 100%);
+  background: linear-gradient(180deg, #fffbf7 0%, #fff5ee 100%);
 }
 
 .ingredients-grid {
@@ -177,12 +183,12 @@
   background: #ffffff;
   border-radius: 16rpx;
   padding: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-  border: 1rpx solid #e8f4f2;
+  box-shadow: 0 2rpx 12rpx rgba(232, 80, 58, 0.08);
+  border: 1rpx solid #ffe8dc;
   position: relative;
   overflow: hidden;
 
-  // 顶部装饰线
+  // 顶部装饰线 - 番茄红
   &::before {
     content: '';
     position: absolute;
@@ -190,16 +196,17 @@
     left: 0;
     right: 0;
     height: 4rpx;
-    background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+    background: linear-gradient(90deg, $primary-color 0%, $primary-light 100%);
   }
 
-  // 交替颜色
+  // 交替颜色 - 焦糖棕
   &:nth-child(3n + 2)::before {
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, $primary-warm 0%, $accent-yellow 100%);
   }
 
+  // 交替颜色 - 芥末黄
   &:nth-child(3n)::before {
-    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(90deg, $accent-yellow 0%, #ffe082 100%);
   }
 
   // 长内容单独占一行
@@ -227,7 +234,7 @@
   .ingredient-quantity {
     font-size: 24rpx;
     color: #fff;
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
     padding: 6rpx 16rpx;
     border-radius: 20rpx;
     font-weight: 500;
@@ -237,11 +244,12 @@
   }
 
   &:nth-child(3n + 2) .ingredient-quantity {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, $primary-warm 0%, $accent-yellow 100%);
   }
 
   &:nth-child(3n) .ingredient-quantity {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, $accent-yellow 0%, #ffe082 100%);
+    color: #5d4037;
   }
 
   .ingredient-notes {
@@ -251,13 +259,13 @@
     color: #888;
     line-height: 1.5;
     padding-top: 12rpx;
-    border-top: 1rpx dashed #eee;
+    border-top: 1rpx dashed #ffe8dc;
   }
 }
 
 // 步骤区域
 .steps-section {
-  background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fffbf7 100%);
 }
 
 .steps-timeline {
@@ -282,7 +290,7 @@
     // 时间轴线条
     .at-timeline-item__tail {
       left: 22rpx;
-      border-left: 3rpx dashed #e8e8e8;
+      border-left: 3rpx dashed #ffe8dc;
       background: none;
     }
 
@@ -294,7 +302,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.3);
+      box-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.3);
       border: none;
 
       &::after {
@@ -317,8 +325,8 @@
       padding: 24rpx;
       background: #ffffff;
       border-radius: 16rpx;
-      box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
-      border: 1rpx solid #f0f0f0;
+      box-shadow: 0 4rpx 20rpx rgba(232, 80, 58, 0.06);
+      border: 1rpx solid #fff5f0;
       margin-top: 0;
     }
   }
@@ -333,12 +341,12 @@
     display: block;
   }
 
-  // 行内提示 - 简洁优雅
+  // 行内提示 - 暖色系
   .step-inline-tip {
     display: block;
     margin-top: 16rpx;
     font-size: 24rpx;
-    color: #ff9500;
+    color: $primary-warm;
     font-style: italic;
     line-height: 1.5;
     padding-left: 4rpx;
@@ -358,9 +366,9 @@
   gap: 20rpx;
   padding: 24rpx;
   margin-bottom: 20rpx;
-  background: linear-gradient(135deg, #fefefe 0%, #f9f9f9 100%);
+  background: linear-gradient(135deg, #fffbf7 0%, #fff5ee 100%);
   border-radius: 16rpx;
-  border-left: 4rpx solid #ffc107;
+  border-left: 4rpx solid $accent-yellow;
 
   &:last-child {
     margin-bottom: 0;
@@ -369,7 +377,7 @@
   .tips-float-number {
     width: 40rpx;
     height: 40rpx;
-    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+    background: linear-gradient(135deg, $accent-yellow 0%, #ffb300 100%);
     color: #fff;
     font-size: 24rpx;
     font-weight: 600;
@@ -396,9 +404,9 @@
 
 .note-item {
   padding: 24rpx;
-  background: #f9f9f9;
+  background: #fff5f0;
   border-radius: 12rpx;
-  border-left: 4rpx solid #000000;
+  border-left: 4rpx solid $primary-color;
 }
 
 .note-text {
