@@ -7,6 +7,7 @@
  */
 import Taro from '@tarojs/taro';
 import request from './api';
+import apiConfig from '../config/api.config';
 
 // 存储 key
 const ACCESS_TOKEN_KEY = 'access_token';
@@ -22,12 +23,45 @@ interface TokenResponse {
   expires_in: number;
 }
 
-// 用户信息类型
+// 用户信息类型（匹配后端 /api/auth/profile 返回）
 export interface UserInfo {
-  userid: string;      // wx-xxxxx
-  mobile?: string;     // 手机号
+  openid: string;
+  uid: string;
   nickname?: string;
-  picture?: string;
+  avatar?: string;
+}
+
+// Token 请求参数
+interface TokenRequestParams {
+  grant_type: 'authorization_code' | 'refresh_token';
+  code?: string;          // grant_type=authorization_code 时使用
+  refresh_token?: string; // grant_type=refresh_token 时使用
+}
+
+/**
+ * 请求 token 端点（OAuth2.1 风格，form-urlencoded）
+ */
+async function requestToken(params: TokenRequestParams): Promise<TokenResponse> {
+  const formData = new URLSearchParams();
+  formData.append('grant_type', params.grant_type);
+  if (params.code) formData.append('code', params.code);
+  if (params.refresh_token) formData.append('refresh_token', params.refresh_token);
+
+  const response = await Taro.request({
+    url: `${apiConfig.API_BASE_URL}/api/auth/token`,
+    method: 'POST',
+    header: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    data: formData.toString(),
+    timeout: apiConfig.API_TIMEOUT,
+  });
+
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    return response.data as TokenResponse;
+  }
+
+  // OAuth2 错误格式
+  const error = response.data as { error?: string; error_description?: string };
+  throw new Error(error.error_description || error.error || '请求失败');
 }
 
 /**
@@ -106,16 +140,16 @@ export function isTokenExpiringSoon(): boolean {
 }
 
 /**
- * 刷新 token
+ * 刷新 token（OAuth2.1 风格，form-urlencoded）
  */
 export async function refreshToken(): Promise<TokenResponse | null> {
   const refresh = getRefreshToken();
   if (!refresh) return null;
 
   try {
-    const response = await request<TokenResponse>('/api/auth/refresh', {
-      method: 'POST',
-      body: JSON.stringify({ refresh_token: refresh }),
+    const response = await requestToken({
+      grant_type: 'refresh_token',
+      refresh_token: refresh,
     });
 
     saveTokens(response);
@@ -145,23 +179,19 @@ export async function ensureValidToken(): Promise<string | null> {
 }
 
 /**
- * 微信登录（需要手机号授权）
- * 
- * @param phoneCode wx.getPhoneNumber() 返回的 code
+ * 微信登录（静默登录，仅使用 openid）
+ * 使用 OAuth2.1 风格的 /token 端点
  */
-export async function wxLogin(phoneCode: string): Promise<TokenResponse> {
+export async function wxLogin(): Promise<TokenResponse> {
   // 获取 login code
   const loginRes = await Taro.login();
   if (!loginRes.code) {
     throw new Error('获取登录凭证失败');
   }
 
-  const response = await request<TokenResponse>('/api/auth/wx-login', {
-    method: 'POST',
-    body: JSON.stringify({
-      login_code: loginRes.code,
-      phone_code: phoneCode,
-    }),
+  const response = await requestToken({
+    grant_type: 'authorization_code',
+    code: loginRes.code,
   });
 
   // 保存 tokens
@@ -182,4 +212,66 @@ export function logout(): void {
  */
 export function isLoggedIn(): boolean {
   return !!getAccessToken();
+}
+
+/**
+ * 获取用户 profile（带 token 校验和刷新）
+ * 进入"我的"页面时调用，有 token 才请求，没有就跳过
+ */
+export async function fetchProfile(): Promise<UserInfo | null> {
+  // 没有 token 直接返回
+  const token = getAccessToken();
+  if (!token) {
+    return null;
+  }
+
+  // 检查 token 是否过期，过期则刷新
+  if (isTokenExpiringSoon()) {
+    const refreshed = await refreshToken();
+    if (!refreshed) {
+      // 刷新失败，返回 null
+      return null;
+    }
+  }
+
+  // 请求 profile 接口
+  try {
+    const profile = await request<UserInfo>('/api/auth/profile');
+    saveUserInfo(profile);
+    return profile;
+  } catch (error) {
+    console.error('[User] 获取 profile 失败:', error);
+    return null;
+  }
+}
+
+/**
+ * 更新用户 profile
+ */
+export async function updateProfile(data: { nickname?: string; avatar?: string }): Promise<UserInfo | null> {
+  // 没有 token 直接返回
+  const token = getAccessToken();
+  if (!token) {
+    return null;
+  }
+
+  // 检查 token 是否过期，过期则刷新
+  if (isTokenExpiringSoon()) {
+    const refreshed = await refreshToken();
+    if (!refreshed) {
+      return null;
+    }
+  }
+
+  try {
+    const profile = await request<UserInfo>('/api/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    saveUserInfo(profile);
+    return profile;
+  } catch (error) {
+    console.error('[User] 更新 profile 失败:', error);
+    throw error;
+  }
 }

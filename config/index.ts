@@ -1,6 +1,12 @@
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
+import * as dotenv from 'dotenv'
+import * as path from 'path'
 import devConfig from './dev'
 import prodConfig from './prod'
+
+// 加载环境变量
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
+dotenv.config({ path: path.resolve(__dirname, '..', envFile) })
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
@@ -18,6 +24,7 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     outputRoot: 'dist',
     plugins: [],
     defineConstants: {
+      'process.env.TARO_APP_API_BASE_URL': JSON.stringify(process.env.TARO_APP_API_BASE_URL),
     },
     copy: {
       patterns: [

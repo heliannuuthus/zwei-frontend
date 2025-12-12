@@ -33,6 +33,7 @@ function getToken(): string | null {
 
 /**
  * 刷新 token（避免循环依赖，直接调用接口）
+ * 使用 OAuth2.1 风格的 /token 端点，form-urlencoded 格式
  */
 async function doRefreshToken(): Promise<boolean> {
   try {
@@ -40,10 +41,10 @@ async function doRefreshToken(): Promise<boolean> {
     if (!refreshToken) return false;
 
     const response = await Taro.request({
-      url: `${apiConfig.baseURL}/api/auth/refresh`,
+      url: `${apiConfig.baseURL}/api/auth/token`,
       method: 'POST',
-      header: { 'Content-Type': 'application/json' },
-      data: { refresh_token: refreshToken },
+      header: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      data: `grant_type=refresh_token&refresh_token=${encodeURIComponent(refreshToken)}`,
       timeout: apiConfig.timeout,
     });
 
@@ -90,8 +91,8 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   // 重试逻辑
   for (let attempt = 1; attempt <= apiConfig.retries; attempt++) {
     try {
-      // 获取 token（刷新接口不需要）
-      const token = url.includes('/auth/refresh') ? null : getToken();
+      // 获取 token（token 接口不需要）
+      const token = url.includes('/auth/token') ? null : getToken();
       const headers: any = {
         'Content-Type': 'application/json',
         ...(options.headers as any),
@@ -159,7 +160,6 @@ export const getApiConfig = () => ({
   baseURL: apiConfig.baseURL,
   timeout: apiConfig.timeout,
   retries: apiConfig.retries,
-  config: apiConfigFile.config,
 });
 
 // 导出默认请求函数

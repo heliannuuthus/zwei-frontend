@@ -14,7 +14,7 @@ interface ApiEnvironmentConfig {
 let apiConfig: ApiEnvironmentConfig
 
 apiConfig = {
-  dev: 'http://192.168.31.190:18000',   // 真机调试地址
+  dev: 'http://172.19.26.76:18000',   // 真机调试地址
   production: 'https://choosy.heliannuuthus.com',
 }
 
