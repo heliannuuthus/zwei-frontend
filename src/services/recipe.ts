@@ -56,7 +56,7 @@ export async function getRecipes(params?: {
   if (params?.offset) queryParams.append('offset', params.offset.toString());
 
   const queryString = queryParams.toString();
-  const url = `/api/recipes${queryString ? `?${queryString}` : ''}`;
+  const url = `/api/recipes/${queryString ? `?${queryString}` : ''}`;
 
   return request<RecipeListItem[]>(url);
 }

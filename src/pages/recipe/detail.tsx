@@ -3,14 +3,18 @@ import { View, Text, ScrollView, Image, RichText } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
   AtMessage,
-  AtLoadMore,
   AtTag,
   AtRate,
   AtTimeline,
   AtFloatLayout,
+  AtIcon,
 } from 'taro-ui';
 import { getRecipeDetail, RecipeDetail } from '../../services/recipe';
+import { checkFavorite, toggleFavorite } from '../../services/favorite';
+import { isLoggedIn } from '../../services/user';
 import { getCategoryColor, getCategoryLabel } from '../../utils/category';
+import starFilledIcon from '../../assets/icons/star-filled.svg';
+import starOutlineIcon from '../../assets/icons/star-outline.svg';
 // 组件样式通过 babel-plugin-import 自动按需导入
 import './detail.scss';
 
@@ -21,6 +25,35 @@ const STEP_COLORS: Array<'blue' | 'green' | 'red' | 'yellow'> = [
   'red',
   'yellow',
 ];
+
+// 骨架屏组件
+const DetailSkeleton = () => (
+  <View className="recipe-detail-page skeleton">
+    <View className="skeleton-image" />
+    <View className="skeleton-content">
+      <View className="skeleton-title" />
+      <View className="skeleton-desc" />
+      <View className="skeleton-tags">
+        <View className="skeleton-tag" />
+        <View className="skeleton-tag" />
+      </View>
+      <View className="skeleton-section">
+        <View className="skeleton-section-title" />
+        <View className="skeleton-grid">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <View key={i} className="skeleton-card" />
+          ))}
+        </View>
+      </View>
+      <View className="skeleton-section">
+        <View className="skeleton-section-title" />
+        {[1, 2, 3].map(i => (
+          <View key={i} className="skeleton-step" />
+        ))}
+      </View>
+    </View>
+  </View>
+);
 
 // 解析步骤描述，分离主要内容和提示
 const parseStepDescription = (description: string) => {
@@ -39,6 +72,8 @@ const RecipeDetailPage = () => {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showTips, setShowTips] = useState<boolean>(false);
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false);
 
   // 将步骤转换为 Timeline 格式
   const timelineItems = useMemo(() => {
@@ -64,12 +99,24 @@ const RecipeDetailPage = () => {
     });
   }, [recipe]);
 
-  // 加载菜谱详情
+  // 加载菜谱详情（并行请求详情和收藏状态）
   const loadRecipeDetail = useCallback(async (recipeId: string) => {
     setLoading(true);
+    
+    // 并行发起请求
+    const recipePromise = getRecipeDetail(recipeId);
+    const favoritePromise = isLoggedIn() 
+      ? checkFavorite(recipeId).catch(() => false) 
+      : Promise.resolve(false);
+
     try {
-      const recipeData = await getRecipeDetail(recipeId);
+      const [recipeData, favorited] = await Promise.all([
+        recipePromise,
+        favoritePromise,
+      ]);
+
       setRecipe(recipeData);
+      setIsFavorite(favorited);
       setLoading(false);
 
       // 设置页面标题
@@ -89,6 +136,40 @@ const RecipeDetailPage = () => {
     }
   }, []);
 
+  // 处理收藏
+  const handleToggleFavorite = useCallback(async () => {
+    if (!recipe) return;
+
+    if (!isLoggedIn()) {
+      Taro.showToast({
+        title: '请先登录',
+        icon: 'none',
+      });
+      return;
+    }
+
+    if (favoriteLoading) return;
+
+    setFavoriteLoading(true);
+    try {
+      const newStatus = await toggleFavorite(recipe.id, isFavorite);
+      setIsFavorite(newStatus);
+      Taro.showToast({
+        title: newStatus ? '已收藏' : '已取消收藏',
+        icon: 'none',
+        duration: 1500,
+      });
+    } catch (error) {
+      console.error('收藏操作失败:', error);
+      Taro.showToast({
+        title: '操作失败',
+        icon: 'none',
+      });
+    } finally {
+      setFavoriteLoading(false);
+    }
+  }, [recipe, isFavorite, favoriteLoading]);
+
   useEffect(() => {
     const { id } = Taro.getCurrentInstance().router?.params || {};
     if (id) {
@@ -105,11 +186,7 @@ const RecipeDetailPage = () => {
   }, [loadRecipeDetail]);
 
   if (loading) {
-    return (
-      <View className="recipe-detail-page">
-        <AtLoadMore status="loading" />
-      </View>
-    );
+    return <DetailSkeleton />;
   }
 
   if (!recipe) {
@@ -246,6 +323,17 @@ const RecipeDetailPage = () => {
         {/* 底部间距 */}
         <View className="bottom-spacer" />
       </ScrollView>
+
+      {/* 收藏按钮 */}
+      <View 
+        className={`favorite-fab ${isFavorite ? 'favorited' : ''} ${favoriteLoading ? 'loading' : ''}`}
+        onClick={handleToggleFavorite}
+      >
+        <Image 
+          src={isFavorite ? starFilledIcon : starOutlineIcon} 
+          className="favorite-icon"
+        />
+      </View>
     </View>
   );
 };

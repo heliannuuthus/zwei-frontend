@@ -4,6 +4,9 @@ import Taro from '@tarojs/taro';
 import type { ButtonProps, InputProps } from '@tarojs/components';
 import { AtIcon } from 'taro-ui';
 import { wxLogin, logout, isLoggedIn, fetchProfile, getUserInfo, updateProfile, UserInfo } from '../../services/user';
+import footprintIcon from '../../assets/icons/footprint.svg';
+import checklistIcon from '../../assets/icons/checklist.svg';
+import starFilledIcon from '../../assets/icons/star-filled.svg';
 import './index.scss';
 
 // 存储 key
@@ -201,7 +204,7 @@ const Profile = () => {
       icon: 'help',
       title: '帮助与反馈',
       onClick: () => {
-        Taro.showToast({ title: '功能开发中', icon: 'none' });
+        Taro.navigateTo({ url: '/pages/profile/help' });
       },
     },
     {
@@ -273,28 +276,28 @@ const Profile = () => {
 
           {/* 快捷入口 */}
           <View className="quick-actions">
-            <View className="action-item" onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}>
+            <View className="action-item" onClick={() => Taro.navigateTo({ url: '/pages/profile/favorites' })}>
               <View className="action-icon">
-                <AtIcon value="heart" size="22" color="#fff" />
+                <Image src={starFilledIcon} className="custom-icon" />
               </View>
               <Text className="action-label">收藏</Text>
             </View>
             <View className="action-item" onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}>
               <View className="action-icon">
-                <AtIcon value="clock" size="22" color="#fff" />
+                <Image src={footprintIcon} className="custom-icon" />
               </View>
               <Text className="action-label">足迹</Text>
             </View>
             <View className="action-item" onClick={() => Taro.switchTab({ url: '/pages/recipe/index' })}>
               <View className="action-icon">
-                <AtIcon value="bookmark" size="22" color="#fff" />
+                <Image src={checklistIcon} className="custom-icon" />
                 {stats.cookingList > 0 && (
                   <View className="action-badge">
                     <Text className="badge-text">{stats.cookingList > 99 ? '99+' : stats.cookingList}</Text>
                   </View>
                 )}
               </View>
-              <Text className="action-label">清单</Text>
+              <Text className="action-label">菜单</Text>
             </View>
           </View>
         </View>

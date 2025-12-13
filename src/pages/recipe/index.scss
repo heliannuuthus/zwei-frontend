@@ -216,7 +216,7 @@ $card-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.08);
     }
   }
 
-  // 添加到清单按钮 - 右下角绝对定位
+  // 添加到菜单按钮 - 右下角绝对定位
   .add-to-list-btn {
     position: absolute;
     right: 12rpx;
@@ -269,10 +269,9 @@ $card-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.08);
   min-height: 400rpx;
 }
 
-// 做饭清单浮层
+// 今日菜单浮层
 .cooking-list {
   padding: 0 24rpx 24rpx;
-  min-height: 400rpx;
 
   .cooking-empty {
     display: flex;
@@ -298,26 +297,52 @@ $card-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.08);
     }
   }
 
-  .cooking-header {
+  .cooking-header-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 16rpx 0 24rpx;
-    border-bottom: 1rpx solid $border-color;
+    gap: 16rpx;
+    padding: 0 0 20rpx;
     margin-bottom: 16rpx;
+    border-bottom: 1rpx solid $border-color;
+    min-height: 64rpx;
 
-    .cooking-count {
-      font-size: 26rpx;
-      color: $text-secondary;
+    .cooking-title {
+      font-size: 32rpx;
+      font-weight: 600;
+      color: $text-primary;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .cooking-categories {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8rpx;
+    }
+
+    .cooking-category-tag {
+      font-size: 20rpx;
+      color: $primary-color;
+      background: rgba($primary-color, 0.1);
+      padding: 4rpx 12rpx;
+      border-radius: 6rpx;
+      line-height: 1.4;
     }
 
     .clear-btn {
-      font-size: 26rpx;
-      color: #ff4d4f;
-      padding: 8rpx 16rpx;
+      padding: 12rpx;
+      border-radius: 50%;
+      background: rgba(#ff4d4f, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
 
       &:active {
         opacity: 0.7;
+        background: rgba(#ff4d4f, 0.2);
       }
     }
   }
@@ -331,20 +356,14 @@ $card-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.08);
     align-items: center;
     padding: 16rpx 0;
     border-bottom: 1rpx solid $border-color;
+    transition: opacity 0.2s;
 
     &:last-child {
       border-bottom: none;
     }
 
-    .cooking-item-content {
-      display: flex;
-      align-items: center;
-      flex: 1;
-      min-width: 0;
-
-      &:active {
-        opacity: 0.7;
-      }
+    &:active {
+      opacity: 0.7;
     }
 
     .cooking-item-image {
@@ -383,31 +402,39 @@ $card-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.08);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        margin-bottom: 8rpx;
+        margin-bottom: 6rpx;
       }
 
-      .cooking-item-category {
-        font-size: 24rpx;
+      .cooking-item-desc {
+        font-size: 22rpx;
         color: $text-hint;
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-bottom: 8rpx;
+        line-height: 1.4;
+      }
+
+      .cooking-item-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8rpx;
+      }
+
+      .cooking-item-tag {
+        font-size: 20rpx;
+        color: $primary-color;
+        background: rgba($primary-color, 0.1);
+        padding: 4rpx 12rpx;
+        border-radius: 6rpx;
       }
     }
 
-    .cooking-item-remove {
-      width: 60rpx;
-      height: 60rpx;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-
-      &:active {
-        opacity: 0.5;
-      }
-    }
   }
 }
 
-// 悬浮清单按钮
+// 悬浮菜单按钮
 .floating-cart-btn {
   position: fixed;
   right: 32rpx;
@@ -429,6 +456,12 @@ $card-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.08);
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 6rpx 20rpx rgba(232, 80, 58, 0.35);
+
+    .cart-icon {
+      width: 44rpx;
+      height: 44rpx;
+      filter: brightness(0) invert(1); // 白色
+    }
   }
 
   &:active {
@@ -440,22 +473,24 @@ $card-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.08);
   // 徽章样式覆盖
   .at-badge {
     .at-badge__num {
-      background: #333;
-      font-size: 20rpx;
-      min-width: 32rpx;
-      height: 32rpx;
-      line-height: 32rpx;
-      padding: 0 8rpx;
-      border-radius: 16rpx;
-      top: -8rpx;
-      right: -8rpx;
+      background: #ff4757;
+      color: #fff;
+      font-size: 22rpx;
+      min-width: 36rpx;
+      height: 36rpx;
+      line-height: 36rpx;
+      padding: 0 10rpx;
+      border-radius: 18rpx;
+      top: -10rpx;
+      right: -10rpx;
       font-weight: 600;
-      border: 2rpx solid #fff;
+      border: 3rpx solid #fff;
       text-align: center;
       display: flex;
       align-items: center;
       justify-content: center;
       box-sizing: border-box;
+      box-shadow: 0 4rpx 12rpx rgba(255, 71, 87, 0.4);
     }
   }
 }

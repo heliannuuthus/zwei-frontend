@@ -9,7 +9,41 @@ $accent-yellow: #f39c12; // 芥末黄
   background: linear-gradient(180deg, #fff9f5 0%, #ffffff 100%);
 }
 
-// Banner 区域
+// Banner 轮播
+.banner-swiper {
+  width: 100%;
+  height: 400rpx;
+  margin-bottom: 30rpx;
+
+  .banner-item {
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    .banner-image {
+      width: 100%;
+      height: 100%;
+    }
+
+    .banner-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 40rpx;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+
+      .banner-title {
+        color: #fff;
+        font-size: 36rpx;
+        font-weight: 600;
+        text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+}
+
+// 默认 Banner（无轮播图时显示）
 .banner-section {
   position: relative;
   height: 400rpx;
@@ -24,11 +58,11 @@ $accent-yellow: #f39c12; // 芥末黄
     text-align: center;
     color: #fff;
 
-    .banner-title {
-      font-size: 48rpx;
+    .banner-main-title {
+      font-size: 52rpx;
       font-weight: bold;
       display: block;
-      margin-bottom: 20rpx;
+      margin-bottom: 16rpx;
     }
 
     .banner-subtitle {
@@ -39,9 +73,25 @@ $accent-yellow: #f39c12; // 芥末黄
     }
 
     .banner-button {
-      background: rgba(255, 255, 255, 0.2);
-      border: 2rpx solid #fff;
-      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 12rpx;
+      background: rgba(255, 255, 255, 0.25);
+      border: 2rpx solid rgba(255, 255, 255, 0.6);
+      padding: 20rpx 48rpx;
+      border-radius: 48rpx;
+      backdrop-filter: blur(10rpx);
+
+      &:active {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(0.98);
+      }
+
+      .banner-button-text {
+        color: #fff;
+        font-size: 28rpx;
+        font-weight: 500;
+      }
     }
   }
 }
@@ -98,14 +148,14 @@ $accent-yellow: #f39c12; // 芥末黄
 
 // 区块样式
 .section {
-  padding: 0 20rpx 40rpx;
+  padding: 0 0 40rpx;
 
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30rpx;
-    padding: 0 20rpx;
+    margin-bottom: 24rpx;
+    padding: 0 40rpx;
 
     .section-title {
       font-size: 36rpx;
@@ -114,61 +164,97 @@ $accent-yellow: #f39c12; // 芥末黄
     }
 
     .section-more {
+      display: flex;
+      align-items: center;
       font-size: 26rpx;
       color: #999;
     }
   }
 }
 
-// 菜品卡片
-.dish-card {
-  margin-bottom: 20rpx;
-  border-radius: 20rpx;
-  overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+// 推荐菜谱横向滚动
+.recommend-scroll {
+  white-space: nowrap;
+  padding: 0 20rpx;
 
-  .dish-content {
-    display: flex;
-    flex-direction: column;
+  .recommend-card {
+    display: inline-block;
+    width: 280rpx;
+    margin-right: 20rpx;
+    background: #fff;
+    border-radius: 20rpx;
+    overflow: hidden;
+    box-shadow: 0 4rpx 20rpx rgba(232, 80, 58, 0.1);
+    vertical-align: top;
 
-    .dish-image {
-      width: 100%;
-      height: 400rpx;
-      border-radius: 15rpx;
-      margin-bottom: 20rpx;
+    &:last-child {
+      margin-right: 40rpx;
     }
 
-    .dish-info {
-      .dish-description {
+    &:active {
+      transform: scale(0.98);
+    }
+
+    .recommend-image-wrapper {
+      position: relative;
+      width: 100%;
+      height: 200rpx;
+
+      .recommend-image {
+        width: 100%;
+        height: 100%;
+      }
+
+      .recommend-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
+        font-size: 60rpx;
+      }
+
+      .recommend-category {
+        position: absolute;
+        top: 16rpx;
+        right: 16rpx;
+        padding: 6rpx 16rpx;
+        border-radius: 20rpx;
+        font-size: 20rpx;
+        color: #fff;
+      }
+    }
+
+    .recommend-info {
+      padding: 20rpx;
+
+      .recommend-name {
         font-size: 28rpx;
-        color: #666;
-        margin-bottom: 15rpx;
+        font-weight: 600;
+        color: #333;
         display: block;
+        margin-bottom: 12rpx;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
-      .dish-tags {
+      .recommend-meta {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10rpx;
-        margin-bottom: 15rpx;
-      }
+        align-items: center;
+        gap: 16rpx;
 
-      .dish-meta {
-        display: flex;
-        gap: 30rpx;
-        font-size: 24rpx;
-        color: #999;
-
-        .meta-item {
-          display: flex;
-          align-items: center;
+        .recommend-time {
+          font-size: 22rpx;
+          color: #999;
         }
       }
     }
   }
 }
 
-// 菜谱网格
+// 热门菜谱网格
 .recipe-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -186,41 +272,171 @@ $accent-yellow: #f39c12; // 芥末黄
       transform: scale(0.98);
     }
 
-    .recipe-image {
+    .recipe-image-wrapper {
       width: 100%;
-      height: 300rpx;
+      height: 240rpx;
+      overflow: hidden;
+
+      .recipe-image {
+        width: 100%;
+        height: 100%;
+      }
+
+      .recipe-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
+        font-size: 60rpx;
+      }
     }
 
     .recipe-info {
       padding: 20rpx;
 
       .recipe-name {
-        font-size: 30rpx;
-        font-weight: bold;
+        font-size: 28rpx;
+        font-weight: 600;
         color: #333;
-        margin-bottom: 10rpx;
+        margin-bottom: 8rpx;
         display: block;
-      }
-
-      .recipe-desc {
-        font-size: 24rpx;
-        color: #999;
-        margin-bottom: 15rpx;
-        display: block;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
       }
 
-      .recipe-meta {
+      .recipe-time {
         display: flex;
         align-items: center;
-
-        .recipe-time {
-          font-size: 22rpx;
-          color: $primary-color;
-        }
+        gap: 8rpx;
+        font-size: 22rpx;
+        color: #999;
       }
     }
+  }
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 40rpx;
+
+  .empty-icon {
+    font-size: 100rpx;
+    margin-bottom: 24rpx;
+  }
+
+  .empty-text {
+    font-size: 32rpx;
+    color: #999;
+    margin-bottom: 32rpx;
+  }
+
+  .empty-action {
+    padding: 20rpx 48rpx;
+    background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
+    border-radius: 40rpx;
+    color: #fff;
+    font-size: 28rpx;
+
+    &:active {
+      opacity: 0.9;
+    }
+  }
+}
+
+// 底部间距
+.bottom-spacer {
+  height: 40rpx;
+}
+
+// 骨架屏样式
+.skeleton {
+  .skeleton-banner {
+    width: 100%;
+    height: 400rpx;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    margin-bottom: 30rpx;
+  }
+
+  .skeleton-actions {
+    display: flex;
+    justify-content: space-around;
+    padding: 30rpx 40rpx;
+    background: #fff;
+    margin: 0 20rpx 30rpx;
+    border-radius: 20rpx;
+
+    .skeleton-action-item {
+      width: 100rpx;
+      height: 140rpx;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s ease-in-out infinite;
+      border-radius: 16rpx;
+    }
+  }
+
+  .skeleton-section {
+    padding: 0 20rpx 40rpx;
+
+    .skeleton-section-title {
+      width: 200rpx;
+      height: 40rpx;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s ease-in-out infinite;
+      border-radius: 8rpx;
+      margin-bottom: 24rpx;
+      margin-left: 20rpx;
+    }
+
+    .skeleton-cards {
+      display: flex;
+      gap: 20rpx;
+      padding: 0 20rpx;
+      overflow: hidden;
+
+      .skeleton-card {
+        width: 280rpx;
+        height: 300rpx;
+        flex-shrink: 0;
+        background: linear-gradient(90deg, #f5f5f5 25%, #ececec 50%, #f5f5f5 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+        border-radius: 20rpx;
+      }
+    }
+
+    .skeleton-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20rpx;
+      padding: 0 20rpx;
+
+      .skeleton-grid-item {
+        height: 320rpx;
+        background: linear-gradient(90deg, #f5f5f5 25%, #ececec 50%, #f5f5f5 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+        border-radius: 20rpx;
+      }
+    }
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

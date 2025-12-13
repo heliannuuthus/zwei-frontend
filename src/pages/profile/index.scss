@@ -230,6 +230,12 @@ $accent-yellow: #f39c12; // 芥末黄
     display: flex;
     align-items: center;
     justify-content: center;
+
+    .custom-icon {
+      width: 44rpx;
+      height: 44rpx;
+      filter: brightness(0) invert(1); // 转为白色
+    }
   }
 
   .action-badge {

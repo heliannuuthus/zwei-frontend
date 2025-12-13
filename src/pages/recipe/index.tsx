@@ -17,21 +17,24 @@ import {
   Category,
 } from '../../services/recipe';
 import { getCategoryColor } from '../../utils/category';
+import checklistIcon from '../../assets/icons/checklist.svg';
 import './index.scss';
 
 // 存储 key
 const COOKING_LIST_KEY = 'cooking_list';
 
-// 清单项类型
+// 菜单项类型
 interface CookingListItem {
   id: string;
   name: string;
+  description?: string;
   image_path?: string;
   category: string;
+  tags?: string[];
   addedAt: number;
 }
 
-// 获取做饭清单
+// 获取今日菜单
 const getCookingList = (): CookingListItem[] => {
   try {
     const data = Taro.getStorageSync(COOKING_LIST_KEY);
@@ -41,7 +44,7 @@ const getCookingList = (): CookingListItem[] => {
   }
 };
 
-// 保存做饭清单
+// 保存今日菜单
 const saveCookingList = (items: CookingListItem[]) => {
   Taro.setStorageSync(COOKING_LIST_KEY, JSON.stringify(items));
 };
@@ -79,7 +82,7 @@ const Recipe = () => {
     categoryDataRef.current = categoryData;
   }, [categoryData]);
 
-  // 初始化加载做饭清单
+  // 初始化加载今日菜单
   useEffect(() => {
     const list = getCookingList();
     setCookingList(list);
@@ -276,23 +279,25 @@ const Recipe = () => {
     return name.replace(/的做法$/, '');
   }, []);
 
-  // 添加到做饭清单
+  // 添加到今日菜单
   const addToCookingList = useCallback(
     (recipe: RecipeListItem) => {
       const isInList = cookingList.some(item => item.id === recipe.id);
 
       if (isInList) {
-        // 已在清单中，移除
+        // 已在菜单中，移除
         const newList = cookingList.filter(item => item.id !== recipe.id);
         setCookingList(newList);
         saveCookingList(newList);
       } else {
-        // 添加到清单
+        // 添加到菜单
         const newItem: CookingListItem = {
           id: recipe.id,
           name: formatRecipeName(recipe.name),
+          description: recipe.description,
           image_path: recipe.image_path,
           category: recipe.category,
+          tags: recipe.tags,
           addedAt: Date.now(),
         };
         const newList = [...cookingList, newItem];
@@ -303,25 +308,11 @@ const Recipe = () => {
     [cookingList, formatRecipeName]
   );
 
-  // 从清单移除
-  const removeFromCookingList = useCallback((itemId: string) => {
-    setCookingList(prev => {
-      const newList = prev.filter(item => item.id !== itemId);
-      saveCookingList(newList);
-      return newList;
-    });
-    Taro.showToast({
-      title: '已移除',
-      icon: 'none',
-      duration: 1000,
-    });
-  }, []);
-
-  // 清空做饭清单
+  // 清空今日菜单
   const clearCookingList = useCallback(() => {
     Taro.showModal({
       title: '确认清空',
-      content: '确定要清空做饭清单吗？',
+      content: '确定要清空今日菜单吗？',
       success: res => {
         if (res.confirm) {
           // 先关闭浮层，避免组件卸载时事件清理问题
@@ -357,7 +348,7 @@ const Recipe = () => {
     );
   }, [categoryData, currentCategory]);
 
-  // 检查菜谱是否在清单中
+  // 检查菜谱是否在菜单中
   const isInCookingList = useCallback(
     (recipeId: string) => {
       return cookingList.some(item => item.id === recipeId);
@@ -546,81 +537,85 @@ const Recipe = () => {
         </ScrollView>
       </View>
 
-      {/* 悬浮清单按钮 */}
-      <View
-        className="floating-cart-btn"
-        onClick={() => setShowCookingList(true)}
-      >
-        <AtBadge value={cookingList.length > 0 ? cookingList.length : ''}>
-          <View className="cart-icon-wrapper">
-            <AtIcon value="shopping-bag" size="22" color="#fff" />
-          </View>
-        </AtBadge>
-      </View>
+      {/* 悬浮清单按钮 - 仅在有菜谱时显示 */}
+      {cookingList.length > 0 && (
+        <View
+          className="floating-cart-btn"
+          onClick={() => setShowCookingList(true)}
+        >
+          <AtBadge value={cookingList.length}>
+            <View className="cart-icon-wrapper">
+              <Image src={checklistIcon} className="cart-icon" />
+            </View>
+          </AtBadge>
+        </View>
+      )}
 
-      {/* 做饭清单浮层 */}
+      {/* 今日菜单浮层 */}
       <AtFloatLayout
         isOpened={showCookingList}
-        title="做饭清单"
         onClose={() => setShowCookingList(false)}
       >
         <View className="cooking-list">
+          <View className="cooking-header-bar">
+            <Text className="cooking-title">共 {cookingList.length} 道菜</Text>
+            <View className="cooking-categories">
+              {[...new Set(cookingList.map(item => item.category))].map((cat, idx) => (
+                <Text key={idx} className="cooking-category-tag">{getCategoryLabel(cat)}</Text>
+              ))}
+            </View>
+            {cookingList.length > 0 && (
+              <View className="clear-btn" onClick={clearCookingList}>
+                <AtIcon value="trash" size="18" color="#ff4d4f" />
+              </View>
+            )}
+          </View>
           {cookingList.length === 0 ? (
             <View className="cooking-empty">
               <View className="cooking-empty-icon">🛒</View>
-              <Text className="cooking-empty-text">清单是空的</Text>
+              <Text className="cooking-empty-text">菜单是空的</Text>
               <Text className="cooking-empty-hint">
-                点击菜品卡片右下角的 + 添加到清单
+                点击菜品卡片右下角的 + 添加到菜单
               </Text>
             </View>
           ) : (
-            <>
-              <View className="cooking-header">
-                <Text className="cooking-count">
-                  共 {cookingList.length} 道菜
-                </Text>
-                <View className="clear-btn" onClick={clearCookingList}>
-                  <Text>清空</Text>
-                </View>
-              </View>
-              <ScrollView className="cooking-scroll" scrollY>
-                {cookingList.map(item => (
-                  <View key={item.id} className="cooking-item">
-                    <View
-                      className="cooking-item-content"
-                      onClick={() => {
-                        setShowCookingList(false);
-                        navigateToDetail(item.id);
-                      }}
-                    >
-                      <View className="cooking-item-image">
-                        {item.image_path ? (
-                          <Image
-                            src={item.image_path}
-                            className="cooking-image"
-                            mode="aspectFill"
-                          />
-                        ) : (
-                          <View className="cooking-image-placeholder">🍽️</View>
-                        )}
-                      </View>
-                      <View className="cooking-item-info">
-                        <Text className="cooking-item-name">{item.name}</Text>
-                        <Text className="cooking-item-category">
-                          {getCategoryLabel(item.category)}
-                        </Text>
-                      </View>
-                    </View>
-                    <View
-                      className="cooking-item-remove"
-                      onClick={() => removeFromCookingList(item.id)}
-                    >
-                      <AtIcon value="close" size="16" color="#999" />
-                    </View>
+            <ScrollView className="cooking-scroll" scrollY>
+              {cookingList.map(item => (
+                <View 
+                  key={item.id} 
+                  className="cooking-item"
+                  onClick={() => {
+                    setShowCookingList(false);
+                    navigateToDetail(item.id);
+                  }}
+                >
+                  <View className="cooking-item-image">
+                    {item.image_path ? (
+                      <Image
+                        src={item.image_path}
+                        className="cooking-image"
+                        mode="aspectFill"
+                      />
+                    ) : (
+                      <View className="cooking-image-placeholder">🍽️</View>
+                    )}
                   </View>
-                ))}
-              </ScrollView>
-            </>
+                  <View className="cooking-item-info">
+                    <Text className="cooking-item-name">{item.name}</Text>
+                    {item.description && (
+                      <Text className="cooking-item-desc">{item.description}</Text>
+                    )}
+                    {item.tags && item.tags.length > 0 && (
+                      <View className="cooking-item-tags">
+                        {item.tags.slice(0, 3).map((tag, idx) => (
+                          <Text key={idx} className="cooking-item-tag">{tag}</Text>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
           )}
         </View>
       </AtFloatLayout>

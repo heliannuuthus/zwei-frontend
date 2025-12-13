@@ -7,6 +7,8 @@ export default defineAppConfig({
     'pages/recipe/detail',
     'pages/takeout/index',
     'pages/profile/index',
+    'pages/profile/favorites',
+    'pages/profile/help',
   ],
   window: {
     backgroundTextStyle: 'light',
