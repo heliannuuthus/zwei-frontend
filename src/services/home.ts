@@ -10,15 +10,17 @@ export interface BannerItem {
   link_type?: 'recipe' | 'url' | 'none';
 }
 
-// 首页配置响应
-export interface HomeConfigResponse {
-  banners: BannerItem[];
-  recommend_recipes: RecipeListItem[];
-  hot_recipes: RecipeListItem[];
+// 获取首页 Banner
+export async function getBanners(): Promise<BannerItem[]> {
+  return request<BannerItem[]>('/api/home/banners');
 }
 
-// 获取首页配置
-export async function getHomeConfig(): Promise<HomeConfigResponse> {
-  return request<HomeConfigResponse>('/api/home/config');
+// 获取推荐菜谱
+export async function getRecommendRecipes(limit = 4): Promise<RecipeListItem[]> {
+  return request<RecipeListItem[]>(`/api/home/recommend?limit=${limit}`);
 }
 
+// 获取热门菜谱
+export async function getHotRecipes(limit = 6): Promise<RecipeListItem[]> {
+  return request<RecipeListItem[]>(`/api/home/hot?limit=${limit}`);
+}

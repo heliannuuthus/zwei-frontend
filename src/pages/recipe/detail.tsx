@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, Image, RichText } from '@tarojs/components';
+import { View, Text, ScrollView, Image, RichText, Swiper, SwiperItem } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
   AtMessage,
@@ -203,25 +203,70 @@ const RecipeDetailPage = () => {
     <View className="recipe-detail-page">
       <AtMessage />
       <ScrollView className="detail-scroll" scrollY>
-        {/* 菜谱图片 */}
-        {recipe.image_path && (
-          <Image
-            src={recipe.image_path}
-            className="recipe-header-image"
-            mode="aspectFill"
-          />
+        {/* 菜谱轮播图 */}
+        {recipe.images && recipe.images.length > 0 ? (
+          <Swiper
+            className="recipe-swiper"
+            indicatorDots
+            indicatorColor="rgba(255,255,255,0.5)"
+            indicatorActiveColor="#fff"
+            autoplay
+            circular
+          >
+            {recipe.images.map((img, idx) => (
+              <SwiperItem key={idx}>
+                <Image src={img} className="recipe-swiper-image" mode="aspectFill" />
+              </SwiperItem>
+            ))}
+          </Swiper>
+        ) : (
+          <View className="recipe-image-placeholder">
+            <Text className="placeholder-icon">📷</Text>
+            <Text className="placeholder-text">暂无图片</Text>
+          </View>
         )}
 
         {/* 基本信息 */}
         <View className="recipe-header">
-          {/* 标题行：左边标题，右边难度 */}
+          {/* 标题行：标题 + 分类 | 难度 + 份数 */}
           <View className="title-row">
-            <Text className="recipe-title">{recipe.name}</Text>
-            <View className="recipe-difficulty">
-              <Text className="difficulty-label">难度：</Text>
-              <AtRate value={recipe.difficulty} max={5} size={12} />
+            <View className="title-left">
+              <Text className="recipe-title">{recipe.name}</Text>
+              <View
+                className="title-category"
+                style={{ backgroundColor: getCategoryColor(recipe.category) }}
+              >
+                {getCategoryLabel(recipe.category)}
+              </View>
+            </View>
+            <View className="title-right">
+              <View className="meta-item">
+                <Text className="meta-label">难度：</Text>
+                <AtRate value={recipe.difficulty} max={5} size={12} />
+              </View>
+              <View className="meta-item">
+                <Text className="meta-label">分量：</Text>
+                <Text className="meta-value">{recipe.servings}人份</Text>
+              </View>
             </View>
           </View>
+
+          {/* Tags 标签 */}
+          {recipe.tags && (
+            <ScrollView className="recipe-detail-tags" scrollX enhanced showScrollbar={false}>
+              <View className="tags-inner">
+                {recipe.tags.cuisines?.map((tag, idx) => (
+                  <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                ))}
+                {recipe.tags.flavors?.map((tag, idx) => (
+                  <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                ))}
+                {recipe.tags.scenes?.map((tag, idx) => (
+                  <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                ))}
+              </View>
+            </ScrollView>
+          )}
 
           {recipe.description && (
             <RichText
@@ -229,24 +274,6 @@ const RecipeDetailPage = () => {
               nodes={recipe.description}
             />
           )}
-
-          {/* 基本信息标签 */}
-          <View className="info-tags">
-            <AtTag
-              size="small"
-              circle
-              customStyle={{
-                backgroundColor: getCategoryColor(recipe.category),
-                color: '#fff',
-                borderColor: getCategoryColor(recipe.category),
-              }}
-            >
-              {getCategoryLabel(recipe.category)}
-            </AtTag>
-            <AtTag size="small" circle>
-              {recipe.servings}人份
-            </AtTag>
-          </View>
         </View>
 
         {/* 食材清单 */}

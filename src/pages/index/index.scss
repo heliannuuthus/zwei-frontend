@@ -1,12 +1,8 @@
-// 更有食欲的暖色系配色
-$primary-color: #e8503a; // 番茄红
-$primary-light: #f4a261; // 沙滩橙
-$primary-warm: #d35400; // 焦糖棕
-$accent-yellow: #f39c12; // 芥末黄
+@use '../../styles/variables' as *;
 
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #fff9f5 0%, #ffffff 100%);
+  background: $bg-color;
 }
 
 // Banner 轮播
@@ -31,13 +27,12 @@ $accent-yellow: #f39c12; // 芥末黄
       left: 0;
       right: 0;
       padding: 40rpx;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
 
       .banner-title {
         color: #fff;
         font-size: 36rpx;
         font-weight: 600;
-        text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
       }
     }
   }
@@ -47,7 +42,7 @@ $accent-yellow: #f39c12; // 芥末黄
 .banner-section {
   position: relative;
   height: 400rpx;
-  background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
+  background: $primary-color;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,14 +71,13 @@ $accent-yellow: #f39c12; // 芥末黄
       display: inline-flex;
       align-items: center;
       gap: 12rpx;
-      background: rgba(255, 255, 255, 0.25);
-      border: 2rpx solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.2);
+      border: 2rpx solid rgba(255, 255, 255, 0.5);
       padding: 20rpx 48rpx;
       border-radius: 48rpx;
-      backdrop-filter: blur(10rpx);
 
       &:active {
-        background: rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.3);
         transform: scale(0.98);
       }
 
@@ -101,10 +95,10 @@ $accent-yellow: #f39c12; // 芥末黄
   display: flex;
   justify-content: space-around;
   padding: 30rpx 40rpx;
-  background: #fff;
+  background: $bg-white;
   margin: 0 20rpx 30rpx;
   border-radius: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(232, 80, 58, 0.08);
+  box-shadow: $card-shadow;
 
   .action-item {
     display: flex;
@@ -121,23 +115,12 @@ $accent-yellow: #f39c12; // 芥末黄
       font-size: 50rpx;
       margin-bottom: 15rpx;
       transition: transform 0.3s;
-
-      &.recommend-icon {
-        background: linear-gradient(135deg, $primary-color 0%, #ff7b5a 100%);
-      }
-
-      &.recipe-icon {
-        background: linear-gradient(135deg, $primary-light 0%, $accent-yellow 100%);
-      }
-
-      &.takeout-icon {
-        background: linear-gradient(135deg, $primary-warm 0%, $primary-light 100%);
-      }
+      background: $primary-light;
     }
 
     .action-text {
       font-size: 24rpx;
-      color: #333;
+      color: $text-primary;
     }
 
     &:active .action-icon {
@@ -160,14 +143,14 @@ $accent-yellow: #f39c12; // 芥末黄
     .section-title {
       font-size: 36rpx;
       font-weight: bold;
-      color: #333;
+      color: $text-primary;
     }
 
     .section-more {
       display: flex;
       align-items: center;
       font-size: 26rpx;
-      color: #999;
+      color: $text-hint;
     }
   }
 }
@@ -181,10 +164,10 @@ $accent-yellow: #f39c12; // 芥末黄
     display: inline-block;
     width: 280rpx;
     margin-right: 20rpx;
-    background: #fff;
+    background: $bg-white;
     border-radius: 20rpx;
     overflow: hidden;
-    box-shadow: 0 4rpx 20rpx rgba(232, 80, 58, 0.1);
+    box-shadow: $card-shadow;
     vertical-align: top;
 
     &:last-child {
@@ -209,20 +192,31 @@ $accent-yellow: #f39c12; // 芥末黄
         width: 100%;
         height: 100%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
-        font-size: 60rpx;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+        
+        .placeholder-icon {
+          font-size: 48rpx;
+          margin-bottom: 8rpx;
+        }
+        
+        .placeholder-text {
+          font-size: 20rpx;
+          color: #999;
+        }
       }
 
       .recommend-category {
         position: absolute;
-        top: 16rpx;
-        right: 16rpx;
-        padding: 6rpx 16rpx;
-        border-radius: 20rpx;
-        font-size: 20rpx;
+        top: 12rpx;
+        left: 12rpx;
+        padding: 4rpx 12rpx;
+        border-radius: 6rpx;
+        font-size: 18rpx;
         color: #fff;
+        font-weight: 500;
       }
     }
 
@@ -232,7 +226,7 @@ $accent-yellow: #f39c12; // 芥末黄
       .recommend-name {
         font-size: 28rpx;
         font-weight: 600;
-        color: #333;
+        color: $text-primary;
         display: block;
         margin-bottom: 12rpx;
         white-space: nowrap;
@@ -247,7 +241,7 @@ $accent-yellow: #f39c12; // 芥末黄
 
         .recommend-time {
           font-size: 22rpx;
-          color: #999;
+          color: $text-hint;
         }
       }
     }
@@ -262,10 +256,10 @@ $accent-yellow: #f39c12; // 芥末黄
   padding: 0 20rpx;
 
   .recipe-item {
-    background: #fff;
+    background: $bg-white;
     border-radius: 20rpx;
     overflow: hidden;
-    box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.06);
+    box-shadow: $card-shadow;
     transition: transform 0.3s;
 
     &:active {
@@ -273,6 +267,7 @@ $accent-yellow: #f39c12; // 芥末黄
     }
 
     .recipe-image-wrapper {
+      position: relative;
       width: 100%;
       height: 240rpx;
       overflow: hidden;
@@ -286,10 +281,31 @@ $accent-yellow: #f39c12; // 芥末黄
         width: 100%;
         height: 100%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
-        font-size: 60rpx;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+        
+        .placeholder-icon {
+          font-size: 48rpx;
+          margin-bottom: 8rpx;
+        }
+        
+        .placeholder-text {
+          font-size: 20rpx;
+          color: #999;
+        }
+      }
+
+      .recipe-category {
+        position: absolute;
+        top: 12rpx;
+        left: 12rpx;
+        padding: 4rpx 12rpx;
+        border-radius: 6rpx;
+        font-size: 18rpx;
+        color: #fff;
+        font-weight: 500;
       }
     }
 
@@ -299,7 +315,7 @@ $accent-yellow: #f39c12; // 芥末黄
       .recipe-name {
         font-size: 28rpx;
         font-weight: 600;
-        color: #333;
+        color: $text-primary;
         margin-bottom: 8rpx;
         display: block;
         white-space: nowrap;
@@ -307,12 +323,15 @@ $accent-yellow: #f39c12; // 芥末黄
         text-overflow: ellipsis;
       }
 
-      .recipe-time {
+      .recipe-meta {
         display: flex;
         align-items: center;
-        gap: 8rpx;
+        gap: 16rpx;
+
+        .recipe-time {
         font-size: 22rpx;
-        color: #999;
+          color: $text-hint;
+        }
       }
     }
   }
@@ -333,13 +352,13 @@ $accent-yellow: #f39c12; // 芥末黄
 
   .empty-text {
     font-size: 32rpx;
-    color: #999;
+    color: $text-hint;
     margin-bottom: 32rpx;
   }
 
   .empty-action {
     padding: 20rpx 48rpx;
-    background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
+    background: $primary-color;
     border-radius: 40rpx;
     color: #fff;
     font-size: 28rpx;
@@ -370,7 +389,7 @@ $accent-yellow: #f39c12; // 芥末黄
     display: flex;
     justify-content: space-around;
     padding: 30rpx 40rpx;
-    background: #fff;
+    background: $bg-white;
     margin: 0 20rpx 30rpx;
     border-radius: 20rpx;
 
@@ -438,5 +457,50 @@ $accent-yellow: #f39c12; // 芥末黄
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+// Tags 样式（横向滚动）
+.recommend-tags,
+.recipe-tags {
+  width: 100%;
+  margin: 8rpx 0;
+  white-space: nowrap;
+
+  .tags-inner {
+    display: inline-flex;
+    flex-wrap: nowrap;
+  }
+
+  .tag {
+    display: inline-block;
+    flex-shrink: 0;
+    padding: 4rpx 12rpx;
+    margin-right: 10rpx;
+    font-size: 20rpx;
+    border-radius: 6rpx;
+    white-space: nowrap;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    // 菜系 - 红色系
+    &.tag-cuisine {
+      background: rgba(231, 76, 60, 0.15);
+      color: #c0392b;
+    }
+
+    // 口味 - 橙色系
+    &.tag-flavor {
+      background: rgba(243, 156, 18, 0.15);
+      color: #d68910;
+    }
+
+    // 场景 - 绿色系
+    &.tag-scene {
+      background: rgba(39, 174, 96, 0.15);
+      color: #1e8449;
+    }
   }
 }

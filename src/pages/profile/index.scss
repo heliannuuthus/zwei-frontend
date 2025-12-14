@@ -1,19 +1,17 @@
-// 更有食欲的暖色系配色
-$primary-color: #e8503a; // 番茄红
-$primary-light: #f4a261; // 沙滩橙
-$primary-warm: #d35400; // 焦糖棕
-$accent-yellow: #f39c12; // 芥末黄
+@use '../../styles/variables' as *;
 
 .profile-page {
-  min-height: 100vh;
-  background: #f8f9fa;
+  height: 100vh;
+  background: $bg-color;
   padding-bottom: env(safe-area-inset-bottom);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 // 用户信息区域
 .user-section {
   position: relative;
-  background: linear-gradient(160deg, $primary-color 0%, $primary-light 60%, $accent-yellow 100%);
+  background: $primary-color;
   padding: 48rpx 32rpx 40rpx;
 
   .user-bg-pattern {
@@ -86,7 +84,7 @@ $accent-yellow: #f39c12; // 芥末黄
     border-radius: 50%;
     border: 4rpx solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 6rpx 24rpx rgba(0, 0, 0, 0.18);
-    background: #fff;
+    background: $bg-white;
     overflow: hidden;
 
     Image, open-data {
@@ -234,7 +232,7 @@ $accent-yellow: #f39c12; // 芥末黄
     .custom-icon {
       width: 44rpx;
       height: 44rpx;
-      filter: brightness(0) invert(1); // 转为白色
+      filter: brightness(0) invert(1);
     }
   }
 
@@ -245,7 +243,7 @@ $accent-yellow: #f39c12; // 芥末黄
     min-width: 32rpx;
     height: 32rpx;
     padding: 0 8rpx;
-    background: #fff;
+    background: $bg-white;
     border-radius: 16rpx;
     display: flex;
     align-items: center;
@@ -273,17 +271,17 @@ $accent-yellow: #f39c12; // 芥末黄
 }
 
 .menu-group {
-  background: #fff;
+  background: $bg-white;
   border-radius: 24rpx;
   margin-bottom: 24rpx;
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+  box-shadow: $card-shadow;
 
   .menu-group-title {
     display: block;
     padding: 28rpx 32rpx 16rpx;
     font-size: 26rpx;
-    color: #999;
+    color: $text-hint;
     font-weight: 500;
     letter-spacing: 1rpx;
   }
@@ -301,7 +299,7 @@ $accent-yellow: #f39c12; // 芥末黄
   }
 
   &:not(:last-child) {
-    border-bottom: 1rpx solid #f5f5f5;
+    border-bottom: 1rpx solid $border-color;
   }
 
   .menu-item-left {
@@ -314,18 +312,18 @@ $accent-yellow: #f39c12; // 芥末黄
     width: 72rpx;
     height: 72rpx;
     border-radius: 18rpx;
-    background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
+    background: $primary-light;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-right: 24rpx;
 
     &.secondary {
-      background: linear-gradient(135deg, #fff8e6 0%, #fff0c8 100%);
+      background: #fff8e6;
     }
 
     &.danger {
-      background: linear-gradient(135deg, #fff0f0 0%, #ffe0e0 100%);
+      background: #fff0f0;
     }
   }
 
@@ -339,13 +337,13 @@ $accent-yellow: #f39c12; // 芥末黄
 
     .menu-title {
       font-size: 30rpx;
-      color: #333;
+      color: $text-primary;
       font-weight: 500;
     }
 
     .menu-subtitle {
       font-size: 24rpx;
-      color: #999;
+      color: $text-hint;
       margin-top: 6rpx;
     }
   }
@@ -360,7 +358,7 @@ $accent-yellow: #f39c12; // 芥末黄
     min-width: 40rpx;
     height: 40rpx;
     padding: 0 12rpx;
-    background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
+    background: $primary-color;
     border-radius: 20rpx;
     font-size: 22rpx;
     color: #fff;
@@ -371,18 +369,18 @@ $accent-yellow: #f39c12; // 芥末黄
   }
 }
 
-// 退出登录按钮（App Store 风格）
+// 退出登录按钮
 .logout-section {
   padding: 40rpx 30rpx 0;
 
   .logout-btn {
-    background: #fff;
+    background: $bg-white;
     border-radius: 24rpx;
     padding: 28rpx 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+    box-shadow: $card-shadow;
     transition: background 0.2s;
 
     &:active {
@@ -455,7 +453,7 @@ $accent-yellow: #f39c12; // 芥末黄
 
 .nickname-modal {
   width: 600rpx;
-  background: #fff;
+  background: $bg-white;
   border-radius: 24rpx;
   overflow: hidden;
   animation: slideUp 0.25s ease;
@@ -463,12 +461,12 @@ $accent-yellow: #f39c12; // 芥末黄
   .nickname-modal-header {
     padding: 36rpx 32rpx 20rpx;
     text-align: center;
-    border-bottom: 1rpx solid #f0f0f0;
+    border-bottom: 1rpx solid $border-color;
 
     .nickname-modal-title {
       font-size: 34rpx;
       font-weight: 600;
-      color: #333;
+      color: $text-primary;
     }
   }
 
@@ -480,8 +478,8 @@ $accent-yellow: #f39c12; // 芥末黄
       height: 88rpx;
       padding: 0 24rpx;
       font-size: 32rpx;
-      color: #333;
-      background: #f8f9fa;
+      color: $text-primary;
+      background: $bg-color;
       border: 2rpx solid #e8e8e8;
       border-radius: 16rpx;
       box-sizing: border-box;
@@ -489,7 +487,7 @@ $accent-yellow: #f39c12; // 芥末黄
 
       &:focus {
         border-color: $primary-color;
-        background: #fff;
+        background: $bg-white;
       }
 
       &::placeholder {
@@ -501,14 +499,14 @@ $accent-yellow: #f39c12; // 芥末黄
       display: block;
       margin-top: 20rpx;
       font-size: 24rpx;
-      color: #999;
+      color: $text-hint;
       line-height: 1.5;
     }
   }
 
   .nickname-modal-footer {
     display: flex;
-    border-top: 1rpx solid #f0f0f0;
+    border-top: 1rpx solid $border-color;
 
     .nickname-modal-btn {
       flex: 1;
@@ -519,12 +517,12 @@ $accent-yellow: #f39c12; // 芥末黄
       transition: background 0.2s;
 
       &:active {
-        background: #f5f5f5;
+        background: $bg-color;
       }
 
       &.cancel {
-        color: #666;
-        border-right: 1rpx solid #f0f0f0;
+        color: $text-secondary;
+        border-right: 1rpx solid $border-color;
       }
 
       &.confirm {

@@ -1,10 +1,8 @@
-// 更有食欲的暖色系配色
-$primary-color: #e8503a;
-$primary-light: #f4a261;
+@use '../../styles/variables' as *;
 
 .page-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #fff9f5 0%, #ffffff 100%);
+  background: $bg-color;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13,25 +11,22 @@ $primary-light: #f4a261;
 .page-content {
   text-align: center;
   padding: 60rpx;
-  background: #fff;
+  background: $bg-white;
   border-radius: 24rpx;
   margin: 40rpx;
-  box-shadow: 0 8rpx 40rpx rgba(232, 80, 58, 0.1);
+  box-shadow: $card-shadow;
 }
 
 .page-title {
   font-size: 48rpx;
   font-weight: bold;
-  background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: $primary-color;
   display: block;
   margin-bottom: 20rpx;
 }
 
 .page-desc {
   font-size: 28rpx;
-  color: #999;
+  color: $text-hint;
   display: block;
 }

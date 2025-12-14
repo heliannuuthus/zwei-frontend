@@ -18,6 +18,12 @@ export default defineAppConfig({
     backgroundColor: '#FFF9F5',
   },
   lazyCodeLoading: 'requiredComponents',
+  requiredPrivateInfos: ['getFuzzyLocation'],
+  permission: {
+    'scope.userFuzzyLocation': {
+      desc: '用于获取天气信息，为您推荐合适的菜品',
+    },
+  },
   tabBar: {
     color: '#999999',
     selectedColor: '#E8503A',

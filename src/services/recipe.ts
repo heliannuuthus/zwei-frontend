@@ -1,5 +1,12 @@
 import request from './api';
 
+// 标签分组
+export interface TagsGrouped {
+  cuisines: string[];
+  flavors: string[];
+  scenes: string[];
+}
+
 // 菜谱类型定义
 export interface RecipeListItem {
   id: string;
@@ -7,7 +14,7 @@ export interface RecipeListItem {
   description: string;
   category: string;
   difficulty: number;
-  tags: string[];
+  tags: TagsGrouped;
   image_path?: string;
   total_time_minutes?: number;
 }
@@ -31,7 +38,7 @@ export interface RecipeDetail {
   description: string;
   category: string;
   difficulty: number;
-  tags: string[];
+  tags: TagsGrouped;
   servings: number;
   image_path?: string;
   prep_time_minutes?: number;
@@ -56,7 +63,7 @@ export async function getRecipes(params?: {
   if (params?.offset) queryParams.append('offset', params.offset.toString());
 
   const queryString = queryParams.toString();
-  const url = `/api/recipes/${queryString ? `?${queryString}` : ''}`;
+  const url = `/api/recipes${queryString ? `?${queryString}` : ''}`;
 
   return request<RecipeListItem[]>(url);
 }

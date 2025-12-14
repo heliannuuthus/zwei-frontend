@@ -1,8 +1,4 @@
-// 更有食欲的暖色系配色
-$primary-color: #e8503a; // 番茄红
-$primary-light: #f4a261; // 沙滩橙
-$primary-warm: #d35400; // 焦糖棕
-$accent-yellow: #f39c12; // 芥末黄
+@use '../../styles/variables' as *;
 
 // 入场动画
 @keyframes slideUpFadeIn {
@@ -18,7 +14,7 @@ $accent-yellow: #f39c12; // 芥末黄
 
 .recipe-detail-page {
   min-height: 100vh;
-  background: #ffffff;
+  background: $bg-white;
   animation: slideUpFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
@@ -26,46 +22,105 @@ $accent-yellow: #f39c12; // 芥末黄
   height: 100vh;
 }
 
-.recipe-header-image {
-  width: 100%;
+// 轮播图
+.recipe-swiper {
+  width: calc(100% - 48rpx);
   height: 500rpx;
-  background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
+  margin: 24rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: $primary-light;
   animation: slideUpFadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+
+  .recipe-swiper-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 24rpx;
+  }
+}
+
+// 无图片占位
+.recipe-image-placeholder {
+  width: calc(100% - 48rpx);
+  height: 400rpx;
+  margin: 24rpx;
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+
+  .placeholder-icon {
+    font-size: 80rpx;
+    margin-bottom: 16rpx;
+  }
+
+  .placeholder-text {
+    font-size: 28rpx;
+    color: #999;
+  }
 }
 
 .recipe-header {
   padding: 40rpx;
-  background: #ffffff;
-  border-bottom: 1rpx solid #f0f0f0;
+  background: $bg-white;
+  border-bottom: 1rpx solid $border-color;
   animation: slideUpFadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
 }
 
 .title-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 16rpx;
   margin-bottom: 16rpx;
 }
 
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
 .recipe-title {
-  font-size: 44rpx;
+  font-size: 40rpx;
   font-weight: 600;
   color: #000000;
   line-height: 1.4;
-  flex: 1;
 }
 
-.recipe-difficulty {
+.title-category {
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+  color: #fff;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.title-right {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8rpx;
   flex-shrink: 0;
+  min-width: 200rpx;
 
-  .difficulty-label {
-    font-size: 24rpx;
-    color: #000000;
-    font-weight: 600;
+  .meta-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+
+    .meta-label {
+      font-size: 22rpx;
+      color: #666;
+    }
+
+    .meta-value {
+      font-size: 22rpx;
+      color: #333;
   }
 
   .at-rate {
@@ -73,17 +128,52 @@ $accent-yellow: #f39c12; // 芥末黄
     align-items: center;
   }
 }
+}
 
-.info-tags {
-  display: flex;
-  gap: 16rpx;
-  margin-bottom: 24rpx;
-  flex-wrap: wrap;
+// 详情页 Tags
+.recipe-detail-tags {
+  width: 100%;
+  margin-bottom: 20rpx;
+  white-space: nowrap;
+
+  .tags-inner {
+    display: inline-flex;
+    flex-wrap: nowrap;
+  }
+
+  .tag {
+    display: inline-block;
+    flex-shrink: 0;
+    padding: 6rpx 16rpx;
+    margin-right: 12rpx;
+    font-size: 24rpx;
+    border-radius: 8rpx;
+    white-space: nowrap;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    &.tag-cuisine {
+      background: rgba(231, 76, 60, 0.15);
+      color: #c0392b;
+    }
+
+    &.tag-flavor {
+      background: rgba(243, 156, 18, 0.15);
+      color: #d68910;
+    }
+
+    &.tag-scene {
+      background: rgba(39, 174, 96, 0.15);
+      color: #1e8449;
+    }
+  }
 }
 
 .recipe-description {
   font-size: 28rpx;
-  color: #666666;
+  color: $text-secondary;
   line-height: 1.8;
   margin-bottom: 32rpx;
 }
@@ -93,8 +183,7 @@ $accent-yellow: #f39c12; // 芥末黄
   gap: 40rpx;
   margin-bottom: 24rpx;
   padding-bottom: 24rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-}
+  border-bottom: 1rpx solid $border-color;
 
 .meta-item {
   display: flex;
@@ -104,13 +193,14 @@ $accent-yellow: #f39c12; // 芥末黄
 
 .meta-label {
   font-size: 24rpx;
-  color: #999999;
+    color: $text-hint;
 }
 
 .meta-value {
   font-size: 28rpx;
   color: #000000;
   font-weight: 500;
+  }
 }
 
 .recipe-tags {
@@ -121,15 +211,15 @@ $accent-yellow: #f39c12; // 芥末黄
 
 .tag {
   font-size: 20rpx;
-  color: #999999;
+  color: $text-hint;
   padding: 6rpx 12rpx;
-  background: #f5f5f5;
+  background: $bg-color;
   border-radius: 6rpx;
 }
 
 .section {
   padding: 40rpx;
-  background: #ffffff;
+  background: $bg-white;
   margin-top: 20rpx;
   animation: slideUpFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 
@@ -159,7 +249,7 @@ $accent-yellow: #f39c12; // 芥末黄
 
 .section-subtitle {
   font-size: 26rpx;
-  color: #999999;
+  color: $text-hint;
 }
 
 // 小贴士按钮
@@ -168,7 +258,7 @@ $accent-yellow: #f39c12; // 芥末黄
   align-items: center;
   gap: 8rpx;
   padding: 12rpx 24rpx;
-  background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+  background: #fff9e6;
   border-radius: 32rpx;
   border: 1rpx solid #ffe58f;
 
@@ -188,9 +278,9 @@ $accent-yellow: #f39c12; // 芥末黄
   }
 }
 
-// 食材区域 - 暖色系
+// 食材区域
 .ingredients-section {
-  background: linear-gradient(180deg, #fffbf7 0%, #fff5ee 100%);
+  background: $bg-color;
 }
 
 .ingredients-grid {
@@ -200,36 +290,14 @@ $accent-yellow: #f39c12; // 芥末黄
 }
 
 .ingredient-card {
-  background: #ffffff;
+  background: $bg-white;
   border-radius: 16rpx;
   padding: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(232, 80, 58, 0.08);
-  border: 1rpx solid #ffe8dc;
+  box-shadow: $card-shadow;
+  border: 1rpx solid $border-color;
   position: relative;
   overflow: hidden;
 
-  // 顶部装饰线 - 番茄红
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4rpx;
-    background: linear-gradient(90deg, $primary-color 0%, $primary-light 100%);
-  }
-
-  // 交替颜色 - 焦糖棕
-  &:nth-child(3n + 2)::before {
-    background: linear-gradient(90deg, $primary-warm 0%, $accent-yellow 100%);
-  }
-
-  // 交替颜色 - 芥末黄
-  &:nth-child(3n)::before {
-    background: linear-gradient(90deg, $accent-yellow 0%, #ffe082 100%);
-  }
-
-  // 长内容单独占一行
   &.wide {
     grid-column: span 2;
   }
@@ -244,7 +312,7 @@ $accent-yellow: #f39c12; // 芥末黄
 
   .ingredient-name {
     font-size: 28rpx;
-    color: #1a1a1a;
+    color: $text-primary;
     font-weight: 600;
     line-height: 1.4;
     min-width: 0;
@@ -254,22 +322,13 @@ $accent-yellow: #f39c12; // 芥末黄
   .ingredient-quantity {
     font-size: 24rpx;
     color: #fff;
-    background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
+    background: $primary-color;
     padding: 6rpx 16rpx;
     border-radius: 20rpx;
     font-weight: 500;
     flex-shrink: 0;
     max-width: 100%;
     word-break: break-all;
-  }
-
-  &:nth-child(3n + 2) .ingredient-quantity {
-    background: linear-gradient(135deg, $primary-warm 0%, $accent-yellow 100%);
-  }
-
-  &:nth-child(3n) .ingredient-quantity {
-    background: linear-gradient(135deg, $accent-yellow 0%, #ffe082 100%);
-    color: #5d4037;
   }
 
   .ingredient-notes {
@@ -279,19 +338,18 @@ $accent-yellow: #f39c12; // 芥末黄
     color: #888;
     line-height: 1.5;
     padding-top: 12rpx;
-    border-top: 1rpx dashed #ffe8dc;
+    border-top: 1rpx dashed $border-color;
   }
 }
 
 // 步骤区域
 .steps-section {
-  background: linear-gradient(180deg, #ffffff 0%, #fffbf7 100%);
+  background: $bg-white;
 }
 
 .steps-timeline {
   padding: 0 8rpx;
 
-  // 覆盖 AtTimeline 默认样式
   .at-timeline {
     padding: 0;
 
@@ -307,14 +365,12 @@ $accent-yellow: #f39c12; // 芥末黄
       }
     }
 
-    // 时间轴线条
     .at-timeline-item__tail {
       left: 22rpx;
-      border-left: 3rpx dashed #ffe8dc;
+      border-left: 3rpx dashed $border-color;
       background: none;
     }
 
-    // 时间轴圆点
     .at-timeline-item__dot {
       width: 44rpx;
       height: 44rpx;
@@ -322,31 +378,29 @@ $accent-yellow: #f39c12; // 芥末黄
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4rpx 16rpx rgba(232, 80, 58, 0.3);
+      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
       border: none;
 
       &::after {
         content: '';
         width: 16rpx;
         height: 16rpx;
-        background: #ffffff;
+        background: $bg-white;
         border-radius: 50%;
       }
     }
 
-    // 隐藏空标题
     .at-timeline-item__content-item--title {
       display: none;
     }
 
-    // 内容区域
     .at-timeline-item__content {
       margin-left: 24rpx;
       padding: 24rpx;
-      background: #ffffff;
+      background: $bg-white;
       border-radius: 16rpx;
-      box-shadow: 0 4rpx 20rpx rgba(232, 80, 58, 0.06);
-      border: 1rpx solid #fff5f0;
+      box-shadow: $card-shadow;
+      border: 1rpx solid $border-color;
       margin-top: 0;
     }
   }
@@ -356,17 +410,16 @@ $accent-yellow: #f39c12; // 芥末黄
 .timeline-step-content {
   .step-main-text {
     font-size: 28rpx;
-    color: #333333;
+    color: $text-primary;
     line-height: 1.8;
     display: block;
   }
 
-  // 行内提示 - 暖色系
   .step-inline-tip {
     display: block;
     margin-top: 16rpx;
     font-size: 24rpx;
-    color: $primary-warm;
+    color: $text-hint;
     font-style: italic;
     line-height: 1.5;
     padding-left: 4rpx;
@@ -386,9 +439,9 @@ $accent-yellow: #f39c12; // 芥末黄
   gap: 20rpx;
   padding: 24rpx;
   margin-bottom: 20rpx;
-  background: linear-gradient(135deg, #fffbf7 0%, #fff5ee 100%);
+  background: $bg-color;
   border-radius: 16rpx;
-  border-left: 4rpx solid $accent-yellow;
+  border-left: 4rpx solid $primary-color;
 
   &:last-child {
     margin-bottom: 0;
@@ -397,7 +450,7 @@ $accent-yellow: #f39c12; // 芥末黄
   .tips-float-number {
     width: 40rpx;
     height: 40rpx;
-    background: linear-gradient(135deg, $accent-yellow 0%, #ffb300 100%);
+    background: $primary-color;
     color: #fff;
     font-size: 24rpx;
     font-weight: 600;
@@ -410,7 +463,7 @@ $accent-yellow: #f39c12; // 芥末黄
 
   .tips-float-text {
     font-size: 28rpx;
-    color: #444444;
+    color: $text-secondary;
     line-height: 1.7;
     flex: 1;
   }
@@ -424,14 +477,14 @@ $accent-yellow: #f39c12; // 芥末黄
 
 .note-item {
   padding: 24rpx;
-  background: #fff5f0;
+  background: $primary-light;
   border-radius: 12rpx;
   border-left: 4rpx solid $primary-color;
 }
 
 .note-text {
   font-size: 28rpx;
-  color: #666666;
+  color: $text-secondary;
   line-height: 1.6;
 }
 
@@ -444,7 +497,7 @@ $accent-yellow: #f39c12; // 芥末黄
 
 .empty-text {
   font-size: 32rpx;
-  color: #999999;
+  color: $text-hint;
 }
 
 .bottom-spacer {
@@ -566,12 +619,12 @@ $accent-yellow: #f39c12; // 芥末黄
   width: 100rpx;
   height: 100rpx;
   border-radius: 50%;
-  background: #ffffff;
+  background: $bg-white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 32rpx rgba(232, 80, 58, 0.25);
-  border: 2rpx solid #ffe8dc;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+  border: 2rpx solid $border-color;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
   animation: popUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
@@ -581,12 +634,12 @@ $accent-yellow: #f39c12; // 芥末黄
   }
 
   &.favorited {
-    background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
+    background: $primary-color;
     border-color: $primary-color;
-    box-shadow: 0 8rpx 32rpx rgba(232, 80, 58, 0.4);
+    box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
 
     .favorite-icon {
-      filter: brightness(0) saturate(100%) invert(85%) sepia(50%) saturate(800%) hue-rotate(360deg) brightness(105%) contrast(105%); // 金黄色
+      filter: brightness(0) saturate(100%) invert(85%) sepia(50%) saturate(800%) hue-rotate(360deg) brightness(105%) contrast(105%);
     }
   }
 
@@ -598,7 +651,6 @@ $accent-yellow: #f39c12; // 芥末黄
   .favorite-icon {
     width: 48rpx;
     height: 48rpx;
-    // 未收藏时用灰色描边
     filter: brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(0%) brightness(85%);
   }
 }

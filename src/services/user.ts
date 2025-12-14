@@ -25,8 +25,7 @@ interface TokenResponse {
 
 // 用户信息类型（匹配后端 /api/auth/profile 返回）
 export interface UserInfo {
-  openid: string;
-  uid: string;
+  openid: string;  // 系统生成的唯一标识（对外 ID）
   nickname?: string;
   avatar?: string;
 }

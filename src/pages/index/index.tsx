@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { View, Text, Image, ScrollView, Swiper, SwiperItem } from '@tarojs/components';
 import { AtIcon, AtRate } from 'taro-ui';
 import Taro from '@tarojs/taro';
-import { getHomeConfig, BannerItem } from '../../services/home';
+import { getBanners, getRecommendRecipes, getHotRecipes, BannerItem } from '../../services/home';
 import { RecipeListItem } from '../../services/recipe';
 import { getCategoryColor, getCategoryLabel } from '../../utils/category';
 import './index.scss';
@@ -44,10 +44,15 @@ const Index = () => {
   const loadHomeData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getHomeConfig();
-      setBanners(data.banners || []);
-      setRecommendRecipes(data.recommend_recipes || []);
-      setHotRecipes(data.hot_recipes || []);
+      // 并行请求三个接口
+      const [bannersData, recommendData, hotData] = await Promise.all([
+        getBanners().catch(() => []),
+        getRecommendRecipes(4).catch(() => []),
+        getHotRecipes(6).catch(() => []),
+      ]);
+      setBanners(bannersData || []);
+      setRecommendRecipes(recommendData || []);
+      setHotRecipes(hotData || []);
     } catch (error) {
       console.error('加载首页数据失败:', error);
     } finally {
@@ -102,7 +107,7 @@ const Index = () => {
   }
 
   return (
-    <ScrollView className="home-container" scrollY>
+    <View className="home-container">
       {/* 顶部 Banner 轮播 */}
       {banners.length > 0 ? (
         <Swiper
@@ -190,7 +195,10 @@ const Index = () => {
                       mode="aspectFill"
                     />
                   ) : (
-                    <View className="recommend-image-placeholder">🍽️</View>
+                    <View className="recommend-image-placeholder">
+                      <Text className="placeholder-icon">📷</Text>
+                      <Text className="placeholder-text">暂无图片</Text>
+                    </View>
                   )}
                   <View
                     className="recommend-category"
@@ -201,6 +209,21 @@ const Index = () => {
                 </View>
                 <View className="recommend-info">
                   <Text className="recommend-name">{formatRecipeName(recipe.name)}</Text>
+                  {recipe.tags && (
+                    <ScrollView className="recommend-tags" scrollX enhanced showScrollbar={false}>
+                      <View className="tags-inner">
+                        {recipe.tags.cuisines?.map((tag, idx) => (
+                          <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                        ))}
+                        {recipe.tags.flavors?.map((tag, idx) => (
+                          <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                        ))}
+                        {recipe.tags.scenes?.map((tag, idx) => (
+                          <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  )}
                   <View className="recommend-meta">
                     <AtRate value={recipe.difficulty} max={5} size={10} />
                     {recipe.total_time_minutes && (
@@ -241,16 +264,41 @@ const Index = () => {
                       mode="aspectFill"
                     />
                   ) : (
-                    <View className="recipe-image-placeholder">🍽️</View>
+                    <View className="recipe-image-placeholder">
+                      <Text className="placeholder-icon">📷</Text>
+                      <Text className="placeholder-text">暂无图片</Text>
+                    </View>
                   )}
+                  <View
+                    className="recipe-category"
+                    style={{ backgroundColor: getCategoryColor(recipe.category) }}
+                  >
+                    {getCategoryLabel(recipe.category)}
+                  </View>
                 </View>
                 <View className="recipe-info">
                   <Text className="recipe-name">{formatRecipeName(recipe.name)}</Text>
-                  {recipe.total_time_minutes && (
-                    <Text className="recipe-time">
-                      <AtIcon value="clock" size="12" color="#999" /> {recipe.total_time_minutes}分钟
-                    </Text>
+                  {recipe.tags && (
+                    <ScrollView className="recipe-tags" scrollX enhanced showScrollbar={false}>
+                      <View className="tags-inner">
+                        {recipe.tags.cuisines?.map((tag, idx) => (
+                          <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                        ))}
+                        {recipe.tags.flavors?.map((tag, idx) => (
+                          <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                        ))}
+                        {recipe.tags.scenes?.map((tag, idx) => (
+                          <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                        ))}
+                      </View>
+                    </ScrollView>
                   )}
+                  <View className="recipe-meta">
+                    <AtRate value={recipe.difficulty} max={5} size={10} />
+                    {recipe.total_time_minutes && (
+                      <Text className="recipe-time">{recipe.total_time_minutes}分钟</Text>
+                    )}
+                  </View>
                 </View>
               </View>
             ))}
@@ -271,7 +319,7 @@ const Index = () => {
 
       {/* 底部间距 */}
       <View className="bottom-spacer" />
-    </ScrollView>
+    </View>
   );
 };
 

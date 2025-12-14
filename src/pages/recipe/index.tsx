@@ -30,9 +30,19 @@ interface CookingListItem {
   description?: string;
   image_path?: string;
   category: string;
-  tags?: string[];
+  tags?: {
+    cuisines: string[];
+    flavors: string[];
+    scenes: string[];
+  };
   addedAt: number;
 }
+
+// 辅助函数：将分组 tags 转为数组
+const flattenTags = (tags?: { cuisines: string[]; flavors: string[]; scenes: string[] }): string[] => {
+  if (!tags) return [];
+  return [...(tags.cuisines || []), ...(tags.flavors || []), ...(tags.scenes || [])];
+};
 
 // 获取今日菜单
 const getCookingList = (): CookingListItem[] => {
@@ -466,9 +476,16 @@ const Recipe = () => {
                           />
                         ) : (
                           <View className="image-placeholder">
-                            <Text className="placeholder-emoji">🍽️</Text>
+                            <Text className="placeholder-icon">📷</Text>
+                            <Text className="placeholder-text">暂无图片</Text>
                           </View>
                         )}
+                        <View
+                          className="image-category"
+                          style={{ backgroundColor: getCategoryColor(recipe.category) }}
+                        >
+                          {getCategoryLabel(recipe.category)}
+                        </View>
                       </View>
 
                       {/* 信息区域 */}
@@ -490,15 +507,22 @@ const Recipe = () => {
                           <Text className="meta-label">难度：</Text>
                           <AtRate value={recipe.difficulty} max={5} size={8} />
                         </View>
-                        {/* 分类标签 */}
-                        <View
-                          className="category-badge"
-                          style={{
-                            backgroundColor: getCategoryColor(recipe.category),
-                          }}
-                        >
-                          {getCategoryLabel(recipe.category)}
-                        </View>
+                        {/* Tags */}
+                        {recipe.tags && (
+                          <ScrollView className="recipe-tags" scrollX enhanced showScrollbar={false}>
+                            <View className="tags-inner">
+                              {recipe.tags.cuisines?.map((tag, idx) => (
+                                <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                              ))}
+                              {recipe.tags.flavors?.map((tag, idx) => (
+                                <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                              ))}
+                              {recipe.tags.scenes?.map((tag, idx) => (
+                                <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                              ))}
+                            </View>
+                          </ScrollView>
+                        )}
                       </View>
                     </View>
                     {/* 添加到清单按钮 - 独立区域 */}
@@ -605,9 +629,9 @@ const Recipe = () => {
                     {item.description && (
                       <Text className="cooking-item-desc">{item.description}</Text>
                     )}
-                    {item.tags && item.tags.length > 0 && (
+                    {item.tags && flattenTags(item.tags).length > 0 && (
                       <View className="cooking-item-tags">
-                        {item.tags.slice(0, 3).map((tag, idx) => (
+                        {flattenTags(item.tags).slice(0, 3).map((tag, idx) => (
                           <Text key={idx} className="cooking-item-tag">{tag}</Text>
                         ))}
                       </View>
