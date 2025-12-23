@@ -5,3 +5,9 @@ deploy_versions/
 node_modules/
 .DS_Store
 .swc
+
+# CI/CD secrets
+*.key
+private.key
+.env*
+!.env.example

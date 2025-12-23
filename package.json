@@ -12,10 +12,11 @@
   "scripts": {
     "build:weapp": "taro build --type weapp",
     "build:h5": "taro build --type h5",
-    "dev:weapp": "npm run build:weapp -- --watch",
+    "dev:weapp": "echo TARO_APP_API_BASE_URL=http://$(hostname -I | awk '{print $1}'):18000 > .env.development && npm run build:weapp -- --watch",
     "dev:h5": "npm run build:h5 -- --watch",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
+    "type:check": "tsc --noEmit",
     "prepare": "husky install",
     "test": "jest"
   },
