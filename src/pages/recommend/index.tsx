@@ -42,8 +42,7 @@ const LoginRequest = ({ onLogin }: { onLogin: () => void }) => (
     <View className="permission-icon">🔐</View>
     <Text className="permission-title">需要登录</Text>
     <Text className="permission-desc">
-      智能推荐功能需要登录后使用，
-      请先登录您的账号
+      智能推荐功能需要登录后使用， 请先登录您的账号
     </Text>
     <AtButton type="primary" className="permission-btn" onClick={onLogin}>
       去登录
@@ -70,7 +69,13 @@ const PermissionRequest = ({ onRetry }: { onRetry: () => void }) => (
 );
 
 // 错误提示组件
-const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
+const ErrorState = ({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) => (
   <View className="error-container">
     <View className="error-icon">😢</View>
     <Text className="error-title">获取信息失败</Text>
@@ -232,7 +237,8 @@ const Recommend = () => {
           <View className="card-content">
             <Text className="location-text">
               {context.location.province}
-              {context.location.city !== context.location.province && ` ${context.location.city}`}
+              {context.location.city !== context.location.province &&
+                ` ${context.location.city}`}
               {context.location.district && ` ${context.location.district}`}
             </Text>
           </View>
@@ -243,18 +249,24 @@ const Recommend = () => {
       {context?.weather && (
         <View className="context-card weather-card">
           <View className="card-header">
-            <Text className="card-icon">{getWeatherIcon(context.weather.weather)}</Text>
+            <Text className="card-icon">
+              {getWeatherIcon(context.weather.weather)}
+            </Text>
             <Text className="card-title">当前天气</Text>
           </View>
           <View className="card-content weather-content">
             <View className="weather-main">
-              <Text className="weather-temp">{context.weather.temperature}°C</Text>
+              <Text className="weather-temp">
+                {context.weather.temperature}°C
+              </Text>
               <Text className="weather-desc">{context.weather.weather}</Text>
             </View>
             <View className="weather-detail">
               <View className="detail-item">
                 <Text className="detail-label">湿度</Text>
-                <Text className="detail-value">{context.weather.humidity}%</Text>
+                <Text className="detail-value">
+                  {context.weather.humidity}%
+                </Text>
               </View>
             </View>
           </View>
@@ -272,15 +284,21 @@ const Recommend = () => {
             <View className="time-tags">
               <View className="time-tag">
                 <Text className="tag-icon">🍽️</Text>
-                <Text className="tag-text">{getMealTimeName(context.time.meal_time)}</Text>
+                <Text className="tag-text">
+                  {getMealTimeName(context.time.meal_time)}
+                </Text>
               </View>
               <View className="time-tag">
                 <Text className="tag-icon">🍃</Text>
-                <Text className="tag-text">{getSeasonName(context.time.season)}</Text>
+                <Text className="tag-text">
+                  {getSeasonName(context.time.season)}
+                </Text>
               </View>
               <View className="time-tag">
                 <Text className="tag-icon">📅</Text>
-                <Text className="tag-text">{getDayOfWeekName(context.time.day_of_week)}</Text>
+                <Text className="tag-text">
+                  {getDayOfWeekName(context.time.day_of_week)}
+                </Text>
               </View>
             </View>
           </View>
@@ -292,8 +310,7 @@ const Recommend = () => {
         <View className="coming-soon-icon">🚧</View>
         <Text className="coming-soon-title">智能推荐功能开发中</Text>
         <Text className="coming-soon-desc">
-          我们将根据您的位置、天气和时间，
-          为您推荐最适合的菜品，敬请期待！
+          我们将根据您的位置、天气和时间， 为您推荐最适合的菜品，敬请期待！
         </Text>
       </View>
 

@@ -15,7 +15,7 @@ export async function getFuzzyLocation(): Promise<LocationInfo | null> {
   try {
     // 先检查授权状态
     const setting = await Taro.getSetting();
-    
+
     if (!setting.authSetting['scope.userFuzzyLocation']) {
       // 请求授权
       try {
@@ -32,14 +32,14 @@ export async function getFuzzyLocation(): Promise<LocationInfo | null> {
     });
 
     console.log('[Location] 获取成功:', res.latitude, res.longitude);
-    
+
     return {
       latitude: res.latitude,
       longitude: res.longitude,
     };
   } catch (error) {
     console.error('[Location] 获取位置失败:', error);
-    
+
     // 尝试使用精确位置作为 fallback
     try {
       const setting = await Taro.getSetting();
@@ -53,11 +53,10 @@ export async function getFuzzyLocation(): Promise<LocationInfo | null> {
     } catch (e) {
       console.error('[Location] Fallback 也失败:', e);
     }
-    
+
     return null;
   }
 }
-
 
 // 上下文响应
 export interface ContextResponse {
@@ -74,10 +73,10 @@ export interface ContextResponse {
   } | null;
   time: {
     timestamp: number;
-    meal_time: string;  // breakfast/lunch/afternoon/dinner/night
-    season: string;     // spring/summer/autumn/winter
+    meal_time: string; // breakfast/lunch/afternoon/dinner/night
+    season: string; // spring/summer/autumn/winter
     day_of_week: number; // 0-6
-    hour: number;       // 0-23
+    hour: number; // 0-23
   } | null;
 }
 
@@ -85,7 +84,9 @@ export interface ContextResponse {
  * 获取推荐上下文（位置、天气、时间）
  * 需要用户登录
  */
-export async function getContext(location: LocationInfo): Promise<ContextResponse> {
+export async function getContext(
+  location: LocationInfo
+): Promise<ContextResponse> {
   return request<ContextResponse>('/api/recommend/context', {
     method: 'POST',
     body: JSON.stringify({
@@ -95,7 +96,6 @@ export async function getContext(location: LocationInfo): Promise<ContextRespons
     }),
   });
 }
-
 
 /**
  * 获取用餐时段的中文名称
@@ -124,7 +124,6 @@ export function getSeasonName(season: string): string {
   return names[season] || '';
 }
 
-
 /**
  * 获取天气图标
  */
@@ -137,4 +136,3 @@ export function getWeatherIcon(weather: string): string {
   if (weather.includes('风')) return '💨';
   return '🌤️';
 }
-

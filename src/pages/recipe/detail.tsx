@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, Image, RichText, Swiper, SwiperItem } from '@tarojs/components';
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  RichText,
+  Swiper,
+  SwiperItem,
+} from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
   AtMessage,
@@ -102,11 +110,11 @@ const RecipeDetailPage = () => {
   // 加载菜谱详情（并行请求详情和收藏状态）
   const loadRecipeDetail = useCallback(async (recipeId: string) => {
     setLoading(true);
-    
+
     // 并行发起请求
     const recipePromise = getRecipeDetail(recipeId);
-    const favoritePromise = isLoggedIn() 
-      ? checkFavorite(recipeId).catch(() => false) 
+    const favoritePromise = isLoggedIn()
+      ? checkFavorite(recipeId).catch(() => false)
       : Promise.resolve(false);
 
     try {
@@ -215,7 +223,11 @@ const RecipeDetailPage = () => {
           >
             {recipe.images.map((img, idx) => (
               <SwiperItem key={idx}>
-                <Image src={img} className="recipe-swiper-image" mode="aspectFill" />
+                <Image
+                  src={img}
+                  className="recipe-swiper-image"
+                  mode="aspectFill"
+                />
               </SwiperItem>
             ))}
           </Swiper>
@@ -253,16 +265,27 @@ const RecipeDetailPage = () => {
 
           {/* Tags 标签 */}
           {recipe.tags && (
-            <ScrollView className="recipe-detail-tags" scrollX enhanced showScrollbar={false}>
+            <ScrollView
+              className="recipe-detail-tags"
+              scrollX
+              enhanced
+              showScrollbar={false}
+            >
               <View className="tags-inner">
                 {recipe.tags.cuisines?.map((tag, idx) => (
-                  <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                  <Text key={`c-${idx}`} className="tag tag-cuisine">
+                    {tag}
+                  </Text>
                 ))}
                 {recipe.tags.flavors?.map((tag, idx) => (
-                  <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                  <Text key={`f-${idx}`} className="tag tag-flavor">
+                    {tag}
+                  </Text>
                 ))}
                 {recipe.tags.scenes?.map((tag, idx) => (
-                  <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                  <Text key={`s-${idx}`} className="tag tag-scene">
+                    {tag}
+                  </Text>
                 ))}
               </View>
             </ScrollView>
@@ -352,12 +375,12 @@ const RecipeDetailPage = () => {
       </ScrollView>
 
       {/* 收藏按钮 */}
-      <View 
+      <View
         className={`favorite-fab ${isFavorite ? 'favorited' : ''} ${favoriteLoading ? 'loading' : ''}`}
         onClick={handleToggleFavorite}
       >
-        <Image 
-          src={isFavorite ? starFilledIcon : starOutlineIcon} 
+        <Image
+          src={isFavorite ? starFilledIcon : starOutlineIcon}
           className="favorite-icon"
         />
       </View>

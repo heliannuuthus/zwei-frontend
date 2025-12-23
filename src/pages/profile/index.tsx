@@ -3,7 +3,15 @@ import { View, Text, Button, OpenData, Image, Input } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import type { ButtonProps, InputProps } from '@tarojs/components';
 import { AtIcon } from 'taro-ui';
-import { wxLogin, logout, isLoggedIn, fetchProfile, getUserInfo, updateProfile, UserInfo } from '../../services/user';
+import {
+  wxLogin,
+  logout,
+  isLoggedIn,
+  fetchProfile,
+  getUserInfo,
+  updateProfile,
+  UserInfo,
+} from '../../services/user';
 import footprintIcon from '../../assets/icons/footprint.svg';
 import checklistIcon from '../../assets/icons/checklist.svg';
 import starFilledIcon from '../../assets/icons/star-filled.svg';
@@ -130,27 +138,30 @@ const Profile = () => {
   }, []);
 
   // 处理选择微信头像
-  const handleChooseAvatar: ButtonProps['onChooseAvatar'] = useCallback(async (e) => {
-    const avatarUrl = e.detail.avatarUrl;
-    if (!avatarUrl) return;
-    
-    try {
-      Taro.showLoading({ title: '更新中...' });
-      
-      // TODO: 上传图片到服务器获取永久 URL
-      // 目前直接使用微信返回的临时路径
-      const profile = await updateProfile({ avatar: avatarUrl });
-      if (profile) {
-        setUserInfo(profile);
-        Taro.showToast({ title: '头像已更新', icon: 'success' });
+  const handleChooseAvatar: ButtonProps['onChooseAvatar'] = useCallback(
+    async e => {
+      const avatarUrl = e.detail.avatarUrl;
+      if (!avatarUrl) return;
+
+      try {
+        Taro.showLoading({ title: '更新中...' });
+
+        // TODO: 上传图片到服务器获取永久 URL
+        // 目前直接使用微信返回的临时路径
+        const profile = await updateProfile({ avatar: avatarUrl });
+        if (profile) {
+          setUserInfo(profile);
+          Taro.showToast({ title: '头像已更新', icon: 'success' });
+        }
+        Taro.hideLoading();
+      } catch (err) {
+        Taro.hideLoading();
+        console.error('修改头像失败:', err);
+        Taro.showToast({ title: '修改失败', icon: 'none' });
       }
-      Taro.hideLoading();
-    } catch (err) {
-      Taro.hideLoading();
-      console.error('修改头像失败:', err);
-      Taro.showToast({ title: '修改失败', icon: 'none' });
-    }
-  }, []);
+    },
+    []
+  );
 
   // 打开昵称编辑弹窗
   const handleOpenNicknameModal = useCallback(() => {
@@ -159,7 +170,7 @@ const Profile = () => {
   }, [userInfo?.nickname]);
 
   // 处理昵称输入（微信昵称类型的 input）
-  const handleNicknameInput: InputProps['onInput'] = useCallback((e) => {
+  const handleNicknameInput: InputProps['onInput'] = useCallback(e => {
     setNicknameInput(e.detail.value || '');
   }, []);
 
@@ -174,7 +185,7 @@ const Profile = () => {
       setNicknameModalVisible(false);
       return;
     }
-    
+
     try {
       Taro.showLoading({ title: '更新中...' });
       const profile = await updateProfile({ nickname: newNickname });
@@ -221,7 +232,6 @@ const Profile = () => {
     },
   ];
 
-
   return (
     <View className="profile-page">
       {/* 顶部用户信息区域 */}
@@ -230,9 +240,9 @@ const Profile = () => {
         <View className="user-content">
           {loggedIn ? (
             <View className="user-info-row">
-              <Button 
-                className="user-avatar-btn" 
-                openType="chooseAvatar" 
+              <Button
+                className="user-avatar-btn"
+                openType="chooseAvatar"
                 onChooseAvatar={handleChooseAvatar}
               >
                 <View className="user-avatar">
@@ -251,7 +261,11 @@ const Profile = () => {
                   <Text className="nickname-text">
                     {userInfo?.nickname || '点击设置昵称'}
                   </Text>
-                  <AtIcon value="edit" size="14" color="rgba(255,255,255,0.7)" />
+                  <AtIcon
+                    value="edit"
+                    size="14"
+                    color="rgba(255,255,255,0.7)"
+                  />
                 </View>
                 <Text className="user-greeting">今天想吃点什么？</Text>
               </View>
@@ -276,24 +290,39 @@ const Profile = () => {
 
           {/* 快捷入口 */}
           <View className="quick-actions">
-            <View className="action-item" onClick={() => Taro.navigateTo({ url: '/pages/profile/favorites' })}>
+            <View
+              className="action-item"
+              onClick={() =>
+                Taro.navigateTo({ url: '/pages/profile/favorites' })
+              }
+            >
               <View className="action-icon">
                 <Image src={starFilledIcon} className="custom-icon" />
               </View>
               <Text className="action-label">收藏</Text>
             </View>
-            <View className="action-item" onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}>
+            <View
+              className="action-item"
+              onClick={() =>
+                Taro.showToast({ title: '功能开发中', icon: 'none' })
+              }
+            >
               <View className="action-icon">
                 <Image src={footprintIcon} className="custom-icon" />
               </View>
               <Text className="action-label">足迹</Text>
             </View>
-            <View className="action-item" onClick={() => Taro.switchTab({ url: '/pages/recipe/index' })}>
+            <View
+              className="action-item"
+              onClick={() => Taro.switchTab({ url: '/pages/recipe/index' })}
+            >
               <View className="action-icon">
                 <Image src={checklistIcon} className="custom-icon" />
                 {stats.cookingList > 0 && (
                   <View className="action-badge">
-                    <Text className="badge-text">{stats.cookingList > 99 ? '99+' : stats.cookingList}</Text>
+                    <Text className="badge-text">
+                      {stats.cookingList > 99 ? '99+' : stats.cookingList}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -341,8 +370,11 @@ const Profile = () => {
 
       {/* 昵称编辑弹窗 */}
       {nicknameModalVisible && (
-        <View className="nickname-modal-mask" onClick={() => setNicknameModalVisible(false)}>
-          <View className="nickname-modal" onClick={(e) => e.stopPropagation()}>
+        <View
+          className="nickname-modal-mask"
+          onClick={() => setNicknameModalVisible(false)}
+        >
+          <View className="nickname-modal" onClick={e => e.stopPropagation()}>
             <View className="nickname-modal-header">
               <Text className="nickname-modal-title">修改昵称</Text>
             </View>
@@ -360,14 +392,14 @@ const Profile = () => {
               </Text>
             </View>
             <View className="nickname-modal-footer">
-              <View 
-                className="nickname-modal-btn cancel" 
+              <View
+                className="nickname-modal-btn cancel"
                 onClick={() => setNicknameModalVisible(false)}
               >
                 <Text>取消</Text>
               </View>
-              <View 
-                className="nickname-modal-btn confirm" 
+              <View
+                className="nickname-modal-btn confirm"
                 onClick={handleConfirmNickname}
               >
                 <Text>确定</Text>

@@ -196,12 +196,12 @@
         align-items: center;
         justify-content: center;
         background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-        
+
         .placeholder-icon {
           font-size: 48rpx;
           margin-bottom: 8rpx;
         }
-        
+
         .placeholder-text {
           font-size: 20rpx;
           color: #999;
@@ -285,12 +285,12 @@
         align-items: center;
         justify-content: center;
         background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-        
+
         .placeholder-icon {
           font-size: 48rpx;
           margin-bottom: 8rpx;
         }
-        
+
         .placeholder-text {
           font-size: 20rpx;
           color: #999;
@@ -329,7 +329,7 @@
         gap: 16rpx;
 
         .recipe-time {
-        font-size: 22rpx;
+          font-size: 22rpx;
           color: $text-hint;
         }
       }
@@ -427,7 +427,12 @@
         width: 280rpx;
         height: 300rpx;
         flex-shrink: 0;
-        background: linear-gradient(90deg, #f5f5f5 25%, #ececec 50%, #f5f5f5 75%);
+        background: linear-gradient(
+          90deg,
+          #f5f5f5 25%,
+          #ececec 50%,
+          #f5f5f5 75%
+        );
         background-size: 200% 100%;
         animation: skeleton-loading 1.5s ease-in-out infinite;
         border-radius: 20rpx;
@@ -442,7 +447,12 @@
 
       .skeleton-grid-item {
         height: 320rpx;
-        background: linear-gradient(90deg, #f5f5f5 25%, #ececec 50%, #f5f5f5 75%);
+        background: linear-gradient(
+          90deg,
+          #f5f5f5 25%,
+          #ececec 50%,
+          #f5f5f5 75%
+        );
         background-size: 200% 100%;
         animation: skeleton-loading 1.5s ease-in-out infinite;
         border-radius: 20rpx;

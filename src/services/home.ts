@@ -16,7 +16,9 @@ export async function getBanners(): Promise<BannerItem[]> {
 }
 
 // 获取推荐菜谱
-export async function getRecommendRecipes(limit = 4): Promise<RecipeListItem[]> {
+export async function getRecommendRecipes(
+  limit = 4
+): Promise<RecipeListItem[]> {
   return request<RecipeListItem[]>(`/api/home/recommend?limit=${limit}`);
 }
 

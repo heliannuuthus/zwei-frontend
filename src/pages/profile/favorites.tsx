@@ -16,41 +16,44 @@ const FavoritesPage = () => {
   const PAGE_SIZE = 20;
 
   // 加载收藏列表
-  const loadFavorites = useCallback(async (isLoadMore = false) => {
-    if (!isLoggedIn()) {
-      setLoading(false);
-      return;
-    }
-
-    if (isLoadMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      const offset = isLoadMore ? favorites.length : 0;
-      const res = await getFavorites({ limit: PAGE_SIZE, offset });
-      
-      if (isLoadMore) {
-        setFavorites(prev => [...prev, ...res.items]);
-      } else {
-        setFavorites(res.items);
+  const loadFavorites = useCallback(
+    async (isLoadMore = false) => {
+      if (!isLoggedIn()) {
+        setLoading(false);
+        return;
       }
-      
-      setTotal(res.total);
-      setHasMore(res.items.length === PAGE_SIZE);
-    } catch (error) {
-      console.error('加载收藏列表失败:', error);
-      Taro.showToast({
-        title: '加载失败',
-        icon: 'none',
-      });
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [favorites.length]);
+
+      if (isLoadMore) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const offset = isLoadMore ? favorites.length : 0;
+        const res = await getFavorites({ limit: PAGE_SIZE, offset });
+
+        if (isLoadMore) {
+          setFavorites(prev => [...prev, ...res.items]);
+        } else {
+          setFavorites(res.items);
+        }
+
+        setTotal(res.total);
+        setHasMore(res.items.length === PAGE_SIZE);
+      } catch (error) {
+        console.error('加载收藏列表失败:', error);
+        Taro.showToast({
+          title: '加载失败',
+          icon: 'none',
+        });
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [favorites.length]
+  );
 
   useEffect(() => {
     loadFavorites();
@@ -84,7 +87,7 @@ const FavoritesPage = () => {
         <View className="empty-state">
           <AtIcon value="heart" size="64" color="#ddd" />
           <Text className="empty-text">登录后查看收藏</Text>
-          <View 
+          <View
             className="login-btn"
             onClick={() => Taro.switchTab({ url: '/pages/profile/index' })}
           >
@@ -122,14 +125,14 @@ const FavoritesPage = () => {
       <View className="favorites-header">
         <Text className="favorites-count">共 {total} 个收藏</Text>
       </View>
-      
+
       <ScrollView
         className="favorites-scroll"
         scrollY
         onScrollToLower={handleLoadMore}
       >
         <View className="favorites-list">
-          {favorites.map((item) => (
+          {favorites.map(item => (
             <View
               key={item.id}
               className="favorite-card"
@@ -146,9 +149,11 @@ const FavoritesPage = () => {
                   <AtIcon value="image" size="32" color="#ccc" />
                 </View>
               )}
-              
+
               <View className="favorite-content">
-                <Text className="favorite-name">{item.recipe?.name || '未知菜谱'}</Text>
+                <Text className="favorite-name">
+                  {item.recipe?.name || '未知菜谱'}
+                </Text>
                 {item.recipe?.description && (
                   <Text className="favorite-desc" numberOfLines={2}>
                     {item.recipe.description}
@@ -156,22 +161,28 @@ const FavoritesPage = () => {
                 )}
                 <View className="favorite-meta">
                   {item.recipe?.category && (
-                    <View 
+                    <View
                       className="favorite-tag"
-                      style={{ backgroundColor: getCategoryColor(item.recipe.category) }}
+                      style={{
+                        backgroundColor: getCategoryColor(item.recipe.category),
+                      }}
                     >
-                      <Text className="tag-text">{getCategoryLabel(item.recipe.category)}</Text>
+                      <Text className="tag-text">
+                        {getCategoryLabel(item.recipe.category)}
+                      </Text>
                     </View>
                   )}
                   {item.recipe?.total_time_minutes && (
                     <View className="favorite-time">
                       <AtIcon value="clock" size="12" color="#999" />
-                      <Text className="time-text">{item.recipe.total_time_minutes}分钟</Text>
+                      <Text className="time-text">
+                        {item.recipe.total_time_minutes}分钟
+                      </Text>
                     </View>
                   )}
                 </View>
               </View>
-              
+
               <View className="favorite-arrow">
                 <AtIcon value="chevron-right" size="18" color="#ccc" />
               </View>
@@ -180,10 +191,8 @@ const FavoritesPage = () => {
         </View>
 
         {/* 加载状态 */}
-        {loadingMore && (
-          <AtLoadMore status="loading" />
-        )}
-        
+        {loadingMore && <AtLoadMore status="loading" />}
+
         {!hasMore && favorites.length > 0 && (
           <View className="no-more">
             <Text className="no-more-text">没有更多了</Text>
@@ -197,4 +206,3 @@ const FavoritesPage = () => {
 };
 
 export default FavoritesPage;
-
