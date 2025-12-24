@@ -256,76 +256,74 @@ const Recommend = () => {
       </View>
 
       {/* 天气卡片 */}
-      {context &&
-        (() => {
-          const theme = getWeatherTheme(context.weather?.weather || '');
-          return (
-            <View
-              className="weather-card"
-              style={{ background: theme.gradient }}
-            >
-              {/* 背景图标 */}
-              <Text className="bg-icon">{theme.icon}</Text>
+      {context && (
+        <View className="weather-card">
+          {/* 顶部：位置 + 时间 */}
+          <View className="card-header">
+            <Text className="location">
+              📍 {context.location?.city || '未知位置'}
+              {context.location?.district && ` · ${context.location.district}`}
+            </Text>
+            {context.time && (
+              <Text className="datetime">
+                {getDayOfWeekName(context.time.day_of_week)}{' '}
+                {String(context.time.hour).padStart(2, '0')}:
+                {String(new Date().getMinutes()).padStart(2, '0')}
+              </Text>
+            )}
+          </View>
 
-              {/* 顶部：位置 + 时间 */}
-              <View className="card-header" style={{ color: theme.textColor }}>
-                <Text className="location">
-                  📍 {context.location?.city || '未知位置'}
-                  {context.location?.district &&
-                    ` · ${context.location.district}`}
-                </Text>
-                {context.time && (
-                  <Text className="datetime">
-                    {getDayOfWeekName(context.time.day_of_week)}{' '}
-                    {String(context.time.hour).padStart(2, '0')}:
-                    {String(new Date().getMinutes()).padStart(2, '0')}
-                  </Text>
-                )}
-              </View>
-
-              {/* 核心：温度 + 天气 */}
-              <View className="weather-main" style={{ color: theme.textColor }}>
-                <View className="temp-row">
-                  <Text className="temp-value">
+          {/* 核心：天气图标 + 温度湿度 */}
+          <View className="weather-main">
+            <Text className="weather-icon">
+              {getWeatherTheme(context.weather?.weather || '').icon}
+            </Text>
+            <View className="data-row">
+              <View className="data-item">
+                <View className="data-value-row">
+                  <Text className="data-value">
                     {context.weather?.temperature || '--'}
                   </Text>
-                  <Text className="temp-unit">°C</Text>
+                  <Text className="data-unit">°C</Text>
                 </View>
-                <Text className="weather-desc">
-                  {context.weather?.weather || '未知'}
+                <Text className="data-label">温度</Text>
+              </View>
+              {context.weather?.humidity && (
+                <View className="data-item">
+                  <View className="data-value-row">
+                    <Text className="data-value">
+                      {context.weather.humidity}
+                    </Text>
+                    <Text className="data-unit">%</Text>
+                  </View>
+                  <Text className="data-label">湿度</Text>
+                </View>
+              )}
+            </View>
+            <Text className="weather-desc">
+              {context.weather?.weather || '未知'}
+            </Text>
+          </View>
+
+          {/* 底部：用餐 + 时节 */}
+          {context.time && (
+            <View className="card-footer">
+              <View className="info-item">
+                <Text className="info-label">用餐</Text>
+                <Text className="info-value">
+                  {getMealTimeName(context.time.meal_time)}
                 </Text>
               </View>
-
-              {/* 底部：湿度 + 标签 */}
-              <View className="card-footer" style={{ color: theme.textColor }}>
-                {context.weather?.humidity && (
-                  <View className="info-item">
-                    <Text className="info-label">湿度</Text>
-                    <Text className="info-value">
-                      {context.weather.humidity}%
-                    </Text>
-                  </View>
-                )}
-                {context.time && (
-                  <>
-                    <View className="info-item">
-                      <Text className="info-label">用餐</Text>
-                      <Text className="info-value">
-                        {getMealTimeName(context.time.meal_time)}
-                      </Text>
-                    </View>
-                    <View className="info-item">
-                      <Text className="info-label">时节</Text>
-                      <Text className="info-value">
-                        {getSeasonName(context.time.season)}
-                      </Text>
-                    </View>
-                  </>
-                )}
+              <View className="info-item">
+                <Text className="info-label">时节</Text>
+                <Text className="info-value">
+                  {getSeasonName(context.time.season)}
+                </Text>
               </View>
             </View>
-          );
-        })()}
+          )}
+        </View>
+      )}
 
       {/* 推荐功能开发中提示 */}
       <View className="coming-soon">
