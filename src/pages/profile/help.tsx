@@ -1,4 +1,4 @@
-import { View, Text, Image } from '@tarojs/components';
+import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { AtIcon } from 'taro-ui';
 import './help.scss';
@@ -91,4 +91,3 @@ const Help = () => {
 };
 
 export default Help;
-

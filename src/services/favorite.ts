@@ -49,7 +49,9 @@ export async function removeFavorite(recipeId: string): Promise<void> {
 
 // 检查是否已收藏
 export async function checkFavorite(recipeId: string): Promise<boolean> {
-  const res = await request<CheckFavoriteResponse>(`/api/favorites/${recipeId}/check`);
+  const res = await request<CheckFavoriteResponse>(
+    `/api/favorites/${recipeId}/check`
+  );
   return res.is_favorite;
 }
 
@@ -69,7 +71,9 @@ export async function getFavorites(params?: {
 }
 
 // 批量检查收藏状态
-export async function batchCheckFavorites(recipeIds: string[]): Promise<string[]> {
+export async function batchCheckFavorites(
+  recipeIds: string[]
+): Promise<string[]> {
   const res = await request<BatchCheckResponse>('/api/favorites/batch-check', {
     method: 'POST',
     body: JSON.stringify({ recipe_ids: recipeIds }),
@@ -78,7 +82,10 @@ export async function batchCheckFavorites(recipeIds: string[]): Promise<string[]
 }
 
 // 切换收藏状态
-export async function toggleFavorite(recipeId: string, currentStatus: boolean): Promise<boolean> {
+export async function toggleFavorite(
+  recipeId: string,
+  currentStatus: boolean
+): Promise<boolean> {
   if (currentStatus) {
     await removeFavorite(recipeId);
     return false;
@@ -87,4 +94,3 @@ export async function toggleFavorite(recipeId: string, currentStatus: boolean): 
     return true;
   }
 }
-

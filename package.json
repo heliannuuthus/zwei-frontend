@@ -12,12 +12,12 @@
   "scripts": {
     "build:weapp": "taro build --type weapp",
     "build:h5": "taro build --type h5",
-    "dev:weapp": "npm run build:weapp -- --watch",
+    "dev:weapp": "echo TARO_APP_API_BASE_URL=http://$(hostname -I | awk '{print $1}'):18000 > .env.development && npm run build:weapp -- --watch",
     "dev:h5": "npm run build:h5 -- --watch",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
-    "prepare": "husky install",
-    "test": "jest"
+    "type:check": "tsc --noEmit",
+    "prepare": "husky install"
   },
   "browserslist": [
     "last 3 versions",
@@ -44,13 +44,11 @@
     "@babel/core": "^7.8.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@tarojs/cli": "4.1.8",
-    "@tarojs/test-utils-react": "^0.1.1",
     "@tarojs/webpack5-runner": "4.1.8",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "babel-preset-taro": "4.1.8",
     "husky": "^9.1.0",
-    "jest-environment-jsdom": "^29.5.0",
     "lint-staged": "^15.2.0",
     "postcss": "^8.4.18",
     "prettier": "^3.3.0",

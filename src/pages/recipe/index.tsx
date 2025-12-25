@@ -39,9 +39,17 @@ interface CookingListItem {
 }
 
 // 辅助函数：将分组 tags 转为数组
-const flattenTags = (tags?: { cuisines: string[]; flavors: string[]; scenes: string[] }): string[] => {
+const flattenTags = (tags?: {
+  cuisines: string[];
+  flavors: string[];
+  scenes: string[];
+}): string[] => {
   if (!tags) return [];
-  return [...(tags.cuisines || []), ...(tags.flavors || []), ...(tags.scenes || [])];
+  return [
+    ...(tags.cuisines || []),
+    ...(tags.flavors || []),
+    ...(tags.scenes || []),
+  ];
 };
 
 // 获取今日菜单
@@ -482,7 +490,9 @@ const Recipe = () => {
                         )}
                         <View
                           className="image-category"
-                          style={{ backgroundColor: getCategoryColor(recipe.category) }}
+                          style={{
+                            backgroundColor: getCategoryColor(recipe.category),
+                          }}
                         >
                           {getCategoryLabel(recipe.category)}
                         </View>
@@ -509,16 +519,36 @@ const Recipe = () => {
                         </View>
                         {/* Tags */}
                         {recipe.tags && (
-                          <ScrollView className="recipe-tags" scrollX enhanced showScrollbar={false}>
+                          <ScrollView
+                            className="recipe-tags"
+                            scrollX
+                            enhanced
+                            showScrollbar={false}
+                          >
                             <View className="tags-inner">
                               {recipe.tags.cuisines?.map((tag, idx) => (
-                                <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                                <Text
+                                  key={`c-${idx}`}
+                                  className="tag tag-cuisine"
+                                >
+                                  {tag}
+                                </Text>
                               ))}
                               {recipe.tags.flavors?.map((tag, idx) => (
-                                <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                                <Text
+                                  key={`f-${idx}`}
+                                  className="tag tag-flavor"
+                                >
+                                  {tag}
+                                </Text>
                               ))}
                               {recipe.tags.scenes?.map((tag, idx) => (
-                                <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                                <Text
+                                  key={`s-${idx}`}
+                                  className="tag tag-scene"
+                                >
+                                  {tag}
+                                </Text>
                               ))}
                             </View>
                           </ScrollView>
@@ -584,9 +614,13 @@ const Recipe = () => {
           <View className="cooking-header-bar">
             <Text className="cooking-title">共 {cookingList.length} 道菜</Text>
             <View className="cooking-categories">
-              {[...new Set(cookingList.map(item => item.category))].map((cat, idx) => (
-                <Text key={idx} className="cooking-category-tag">{getCategoryLabel(cat)}</Text>
-              ))}
+              {[...new Set(cookingList.map(item => item.category))].map(
+                (cat, idx) => (
+                  <Text key={idx} className="cooking-category-tag">
+                    {getCategoryLabel(cat)}
+                  </Text>
+                )
+              )}
             </View>
             {cookingList.length > 0 && (
               <View className="clear-btn" onClick={clearCookingList}>
@@ -605,8 +639,8 @@ const Recipe = () => {
           ) : (
             <ScrollView className="cooking-scroll" scrollY>
               {cookingList.map(item => (
-                <View 
-                  key={item.id} 
+                <View
+                  key={item.id}
                   className="cooking-item"
                   onClick={() => {
                     setShowCookingList(false);
@@ -627,13 +661,19 @@ const Recipe = () => {
                   <View className="cooking-item-info">
                     <Text className="cooking-item-name">{item.name}</Text>
                     {item.description && (
-                      <Text className="cooking-item-desc">{item.description}</Text>
+                      <Text className="cooking-item-desc">
+                        {item.description}
+                      </Text>
                     )}
                     {item.tags && flattenTags(item.tags).length > 0 && (
                       <View className="cooking-item-tags">
-                        {flattenTags(item.tags).slice(0, 3).map((tag, idx) => (
-                          <Text key={idx} className="cooking-item-tag">{tag}</Text>
-                        ))}
+                        {flattenTags(item.tags)
+                          .slice(0, 3)
+                          .map((tag, idx) => (
+                            <Text key={idx} className="cooking-item-tag">
+                              {tag}
+                            </Text>
+                          ))}
                       </View>
                     )}
                   </View>

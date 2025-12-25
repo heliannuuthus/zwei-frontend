@@ -1,6 +1,6 @@
 /**
  * 用户服务
- * 
+ *
  * Token 机制：
  * - access_token: 2小时有效，用于 API 认证
  * - refresh_token: 7天有效，用于刷新 access_token
@@ -25,7 +25,7 @@ interface TokenResponse {
 
 // 用户信息类型（匹配后端 /api/auth/profile 返回）
 export interface UserInfo {
-  openid: string;  // 系统生成的唯一标识（对外 ID）
+  openid: string; // 系统生成的唯一标识（对外 ID）
   nickname?: string;
   avatar?: string;
 }
@@ -33,18 +33,21 @@ export interface UserInfo {
 // Token 请求参数
 interface TokenRequestParams {
   grant_type: 'authorization_code' | 'refresh_token';
-  code?: string;          // grant_type=authorization_code 时使用
+  code?: string; // grant_type=authorization_code 时使用
   refresh_token?: string; // grant_type=refresh_token 时使用
 }
 
 /**
  * 请求 token 端点（OAuth2.1 风格，form-urlencoded）
  */
-async function requestToken(params: TokenRequestParams): Promise<TokenResponse> {
+async function requestToken(
+  params: TokenRequestParams
+): Promise<TokenResponse> {
   const formData = new URLSearchParams();
   formData.append('grant_type', params.grant_type);
   if (params.code) formData.append('code', params.code);
-  if (params.refresh_token) formData.append('refresh_token', params.refresh_token);
+  if (params.refresh_token)
+    formData.append('refresh_token', params.refresh_token);
 
   const response = await Taro.request({
     url: `${apiConfig.API_BASE_URL}/api/auth/token`,
@@ -247,7 +250,10 @@ export async function fetchProfile(): Promise<UserInfo | null> {
 /**
  * 更新用户 profile
  */
-export async function updateProfile(data: { nickname?: string; avatar?: string }): Promise<UserInfo | null> {
+export async function updateProfile(data: {
+  nickname?: string;
+  avatar?: string;
+}): Promise<UserInfo | null> {
   // 没有 token 直接返回
   const token = getAccessToken();
   if (!token) {

@@ -1,14 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, Image, RichText, Swiper, SwiperItem } from '@tarojs/components';
+import { View, Text, ScrollView, Image, RichText } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import {
-  AtMessage,
-  AtTag,
-  AtRate,
-  AtTimeline,
-  AtFloatLayout,
-  AtIcon,
-} from 'taro-ui';
+import { AtMessage, AtRate, AtTimeline, AtFloatLayout } from 'taro-ui';
 import { getRecipeDetail, RecipeDetail } from '../../services/recipe';
 import { checkFavorite, toggleFavorite } from '../../services/favorite';
 import { isLoggedIn } from '../../services/user';
@@ -102,11 +95,11 @@ const RecipeDetailPage = () => {
   // 加载菜谱详情（并行请求详情和收藏状态）
   const loadRecipeDetail = useCallback(async (recipeId: string) => {
     setLoading(true);
-    
+
     // 并行发起请求
     const recipePromise = getRecipeDetail(recipeId);
-    const favoritePromise = isLoggedIn() 
-      ? checkFavorite(recipeId).catch(() => false) 
+    const favoritePromise = isLoggedIn()
+      ? checkFavorite(recipeId).catch(() => false)
       : Promise.resolve(false);
 
     try {
@@ -203,22 +196,13 @@ const RecipeDetailPage = () => {
     <View className="recipe-detail-page">
       <AtMessage />
       <ScrollView className="detail-scroll" scrollY>
-        {/* 菜谱轮播图 */}
-        {recipe.images && recipe.images.length > 0 ? (
-          <Swiper
-            className="recipe-swiper"
-            indicatorDots
-            indicatorColor="rgba(255,255,255,0.5)"
-            indicatorActiveColor="#fff"
-            autoplay
-            circular
-          >
-            {recipe.images.map((img, idx) => (
-              <SwiperItem key={idx}>
-                <Image src={img} className="recipe-swiper-image" mode="aspectFill" />
-              </SwiperItem>
-            ))}
-          </Swiper>
+        {/* 菜谱图片 */}
+        {recipe.image_path ? (
+          <Image
+            src={recipe.image_path}
+            className="recipe-header-image"
+            mode="aspectFill"
+          />
         ) : (
           <View className="recipe-image-placeholder">
             <Text className="placeholder-icon">📷</Text>
@@ -253,16 +237,27 @@ const RecipeDetailPage = () => {
 
           {/* Tags 标签 */}
           {recipe.tags && (
-            <ScrollView className="recipe-detail-tags" scrollX enhanced showScrollbar={false}>
+            <ScrollView
+              className="recipe-detail-tags"
+              scrollX
+              enhanced
+              showScrollbar={false}
+            >
               <View className="tags-inner">
                 {recipe.tags.cuisines?.map((tag, idx) => (
-                  <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                  <Text key={`c-${idx}`} className="tag tag-cuisine">
+                    {tag}
+                  </Text>
                 ))}
                 {recipe.tags.flavors?.map((tag, idx) => (
-                  <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                  <Text key={`f-${idx}`} className="tag tag-flavor">
+                    {tag}
+                  </Text>
                 ))}
                 {recipe.tags.scenes?.map((tag, idx) => (
-                  <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                  <Text key={`s-${idx}`} className="tag tag-scene">
+                    {tag}
+                  </Text>
                 ))}
               </View>
             </ScrollView>
@@ -352,12 +347,12 @@ const RecipeDetailPage = () => {
       </ScrollView>
 
       {/* 收藏按钮 */}
-      <View 
+      <View
         className={`favorite-fab ${isFavorite ? 'favorited' : ''} ${favoriteLoading ? 'loading' : ''}`}
         onClick={handleToggleFavorite}
       >
-        <Image 
-          src={isFavorite ? starFilledIcon : starOutlineIcon} 
+        <Image
+          src={isFavorite ? starFilledIcon : starOutlineIcon}
           className="favorite-icon"
         />
       </View>

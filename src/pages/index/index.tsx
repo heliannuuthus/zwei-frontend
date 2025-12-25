@@ -1,8 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, Image, ScrollView, Swiper, SwiperItem } from '@tarojs/components';
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  Swiper,
+  SwiperItem,
+} from '@tarojs/components';
 import { AtIcon, AtRate } from 'taro-ui';
 import Taro from '@tarojs/taro';
-import { getBanners, getRecommendRecipes, getHotRecipes, BannerItem } from '../../services/home';
+import {
+  getBanners,
+  getRecommendRecipes,
+  getHotRecipes,
+  BannerItem,
+} from '../../services/home';
 import { RecipeListItem } from '../../services/recipe';
 import { getCategoryColor, getCategoryLabel } from '../../utils/category';
 import './index.scss';
@@ -38,7 +50,9 @@ const HomeSkeleton = () => (
 const Index = () => {
   const [loading, setLoading] = useState(true);
   const [banners, setBanners] = useState<BannerItem[]>([]);
-  const [recommendRecipes, setRecommendRecipes] = useState<RecipeListItem[]>([]);
+  const [recommendRecipes, setRecommendRecipes] = useState<RecipeListItem[]>(
+    []
+  );
   const [hotRecipes, setHotRecipes] = useState<RecipeListItem[]>([]);
 
   const loadHomeData = useCallback(async () => {
@@ -72,14 +86,17 @@ const Index = () => {
     });
   }, []);
 
-  const handleBannerClick = useCallback((banner: BannerItem) => {
-    if (banner.link_type === 'recipe' && banner.link) {
-      navigateToRecipeDetail(banner.link);
-    } else if (banner.link_type === 'url' && banner.link) {
-      // 小程序不支持直接打开外部链接，可以复制到剪贴板
-      Taro.setClipboardData({ data: banner.link });
-    }
-  }, [navigateToRecipeDetail]);
+  const handleBannerClick = useCallback(
+    (banner: BannerItem) => {
+      if (banner.link_type === 'recipe' && banner.link) {
+        navigateToRecipeDetail(banner.link);
+      } else if (banner.link_type === 'url' && banner.link) {
+        // 小程序不支持直接打开外部链接，可以复制到剪贴板
+        Taro.setClipboardData({ data: banner.link });
+      }
+    },
+    [navigateToRecipeDetail]
+  );
 
   // 格式化菜谱名称（去掉"的做法"后缀）
   const formatRecipeName = useCallback((name: string) => {
@@ -120,7 +137,10 @@ const Index = () => {
           interval={4000}
         >
           {banners.map(banner => (
-            <SwiperItem key={banner.id} onClick={() => handleBannerClick(banner)}>
+            <SwiperItem
+              key={banner.id}
+              onClick={() => handleBannerClick(banner)}
+            >
               <View className="banner-item">
                 <Image
                   src={banner.image_url}
@@ -202,24 +222,39 @@ const Index = () => {
                   )}
                   <View
                     className="recommend-category"
-                    style={{ backgroundColor: getCategoryColor(recipe.category) }}
+                    style={{
+                      backgroundColor: getCategoryColor(recipe.category),
+                    }}
                   >
                     {getCategoryLabel(recipe.category)}
                   </View>
                 </View>
                 <View className="recommend-info">
-                  <Text className="recommend-name">{formatRecipeName(recipe.name)}</Text>
+                  <Text className="recommend-name">
+                    {formatRecipeName(recipe.name)}
+                  </Text>
                   {recipe.tags && (
-                    <ScrollView className="recommend-tags" scrollX enhanced showScrollbar={false}>
+                    <ScrollView
+                      className="recommend-tags"
+                      scrollX
+                      enhanced
+                      showScrollbar={false}
+                    >
                       <View className="tags-inner">
                         {recipe.tags.cuisines?.map((tag, idx) => (
-                          <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                          <Text key={`c-${idx}`} className="tag tag-cuisine">
+                            {tag}
+                          </Text>
                         ))}
                         {recipe.tags.flavors?.map((tag, idx) => (
-                          <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                          <Text key={`f-${idx}`} className="tag tag-flavor">
+                            {tag}
+                          </Text>
                         ))}
                         {recipe.tags.scenes?.map((tag, idx) => (
-                          <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                          <Text key={`s-${idx}`} className="tag tag-scene">
+                            {tag}
+                          </Text>
                         ))}
                       </View>
                     </ScrollView>
@@ -227,7 +262,9 @@ const Index = () => {
                   <View className="recommend-meta">
                     <AtRate value={recipe.difficulty} max={5} size={10} />
                     {recipe.total_time_minutes && (
-                      <Text className="recommend-time">{recipe.total_time_minutes}分钟</Text>
+                      <Text className="recommend-time">
+                        {recipe.total_time_minutes}分钟
+                      </Text>
                     )}
                   </View>
                 </View>
@@ -271,24 +308,39 @@ const Index = () => {
                   )}
                   <View
                     className="recipe-category"
-                    style={{ backgroundColor: getCategoryColor(recipe.category) }}
+                    style={{
+                      backgroundColor: getCategoryColor(recipe.category),
+                    }}
                   >
                     {getCategoryLabel(recipe.category)}
                   </View>
                 </View>
                 <View className="recipe-info">
-                  <Text className="recipe-name">{formatRecipeName(recipe.name)}</Text>
+                  <Text className="recipe-name">
+                    {formatRecipeName(recipe.name)}
+                  </Text>
                   {recipe.tags && (
-                    <ScrollView className="recipe-tags" scrollX enhanced showScrollbar={false}>
+                    <ScrollView
+                      className="recipe-tags"
+                      scrollX
+                      enhanced
+                      showScrollbar={false}
+                    >
                       <View className="tags-inner">
                         {recipe.tags.cuisines?.map((tag, idx) => (
-                          <Text key={`c-${idx}`} className="tag tag-cuisine">{tag}</Text>
+                          <Text key={`c-${idx}`} className="tag tag-cuisine">
+                            {tag}
+                          </Text>
                         ))}
                         {recipe.tags.flavors?.map((tag, idx) => (
-                          <Text key={`f-${idx}`} className="tag tag-flavor">{tag}</Text>
+                          <Text key={`f-${idx}`} className="tag tag-flavor">
+                            {tag}
+                          </Text>
                         ))}
                         {recipe.tags.scenes?.map((tag, idx) => (
-                          <Text key={`s-${idx}`} className="tag tag-scene">{tag}</Text>
+                          <Text key={`s-${idx}`} className="tag tag-scene">
+                            {tag}
+                          </Text>
                         ))}
                       </View>
                     </ScrollView>
@@ -296,7 +348,9 @@ const Index = () => {
                   <View className="recipe-meta">
                     <AtRate value={recipe.difficulty} max={5} size={10} />
                     {recipe.total_time_minutes && (
-                      <Text className="recipe-time">{recipe.total_time_minutes}分钟</Text>
+                      <Text className="recipe-time">
+                        {recipe.total_time_minutes}分钟
+                      </Text>
                     )}
                   </View>
                 </View>
@@ -311,7 +365,10 @@ const Index = () => {
         <View className="empty-state">
           <View className="empty-icon">🍳</View>
           <Text className="empty-text">暂无菜谱数据</Text>
-          <View className="empty-action" onClick={() => Taro.switchTab({ url: '/pages/recipe/index' })}>
+          <View
+            className="empty-action"
+            onClick={() => Taro.switchTab({ url: '/pages/recipe/index' })}
+          >
             <Text>去看看菜谱</Text>
           </View>
         </View>

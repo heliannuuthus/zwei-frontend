@@ -121,13 +121,13 @@
     .meta-value {
       font-size: 22rpx;
       color: #333;
-  }
+    }
 
-  .at-rate {
-    display: flex;
-    align-items: center;
+    .at-rate {
+      display: flex;
+      align-items: center;
+    }
   }
-}
 }
 
 // 详情页 Tags
@@ -185,21 +185,21 @@
   padding-bottom: 24rpx;
   border-bottom: 1rpx solid $border-color;
 
-.meta-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+  }
 
-.meta-label {
-  font-size: 24rpx;
+  .meta-label {
+    font-size: 24rpx;
     color: $text-hint;
-}
+  }
 
-.meta-value {
-  font-size: 28rpx;
-  color: #000000;
-  font-weight: 500;
+  .meta-value {
+    font-size: 28rpx;
+    color: #000000;
+    font-weight: 500;
   }
 }
 
@@ -223,9 +223,15 @@
   margin-top: 20rpx;
   animation: slideUpFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 
-  &:nth-child(2) { animation-delay: 0.15s; }
-  &:nth-child(3) { animation-delay: 0.2s; }
-  &:nth-child(4) { animation-delay: 0.25s; }
+  &:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  &:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  &:nth-child(4) {
+    animation-delay: 0.25s;
+  }
 }
 
 .section-header {
@@ -639,7 +645,8 @@
     box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
 
     .favorite-icon {
-      filter: brightness(0) saturate(100%) invert(85%) sepia(50%) saturate(800%) hue-rotate(360deg) brightness(105%) contrast(105%);
+      filter: brightness(0) saturate(100%) invert(85%) sepia(50%) saturate(800%)
+        hue-rotate(360deg) brightness(105%) contrast(105%);
     }
   }
 
@@ -651,6 +658,7 @@
   .favorite-icon {
     width: 48rpx;
     height: 48rpx;
-    filter: brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(0%) brightness(85%);
+    filter: brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(0%)
+      brightness(85%);
   }
 }

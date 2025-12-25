@@ -1,0 +1,171 @@
+name: Deploy to WeChat
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+      description:
+        description: 'Version description'
+        required: false
+        type: string
+        default: 'CI auto upload'
+      environment:
+        description: 'Deploy environment'
+        required: true
+        type: choice
+        options:
+          - preview
+          - production
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.env.outputs.version }}
+      description: ${{ steps.env.outputs.description }}
+      environment: ${{ steps.env.outputs.env }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "env=production" >> $GITHUB_OUTPUT
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "description=Release ${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "description=${{ inputs.description }}" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for production
+        run: pnpm build:weapp
+        env:
+          NODE_ENV: production
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weapp-dist
+          path: dist/
+          retention-days: 1
+
+  deploy-preview:
+    needs: build
+    if: needs.build.outputs.environment == 'preview'
+    runs-on: ubuntu-latest
+    environment: preview
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: weapp-dist
+          path: dist/
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install miniprogram-ci
+        run: pnpm add -g miniprogram-ci
+
+      - name: Write private key
+        run: echo "${{ secrets.WEAPP_PRIVATE_KEY }}" > private.key
+
+      - name: Upload to WeChat (Preview)
+        run: |
+          npx miniprogram-ci preview \
+            --pp ./dist \
+            --pkp ./private.key \
+            --appid ${{ secrets.WEAPP_APPID }} \
+            --uv "${{ needs.build.outputs.version }}" \
+            --ud "${{ needs.build.outputs.description }}" \
+            --enable-es6 true \
+            --enable-es7 true \
+            --enable-minify true \
+            --enable-minifyWXML true \
+            --enable-minifyWXSS true \
+            --enable-autoPrefixWXSS true
+
+      - name: Cleanup
+        if: always()
+        run: rm -f private.key
+
+  deploy-production:
+    needs: build
+    if: needs.build.outputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: weapp-dist
+          path: dist/
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install miniprogram-ci
+        run: pnpm add -g miniprogram-ci
+
+      - name: Write private key
+        run: echo "${{ secrets.WEAPP_PRIVATE_KEY }}" > private.key
+
+      - name: Upload to WeChat (Production)
+        run: |
+          npx miniprogram-ci upload \
+            --pp ./dist \
+            --pkp ./private.key \
+            --appid ${{ secrets.WEAPP_APPID }} \
+            --uv "${{ needs.build.outputs.version }}" \
+            --ud "${{ needs.build.outputs.description }}" \
+            --enable-es6 true \
+            --enable-es7 true \
+            --enable-minify true \
+            --enable-minifyWXML true \
+            --enable-minifyWXSS true \
+            --enable-autoPrefixWXSS true
+
+      - name: Cleanup
+        if: always()
+        run: rm -f private.key
+
+      - name: Notify
+        run: |
+          echo "::notice::代码已上传到微信后台，请前往微信公众平台提交审核"
+          echo "版本号: ${{ needs.build.outputs.version }}"
+          echo "描述: ${{ needs.build.outputs.description }}"

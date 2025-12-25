@@ -68,7 +68,7 @@ async function doRefreshToken(): Promise<boolean> {
 async function handleTokenRefresh(): Promise<boolean> {
   if (isRefreshing) {
     // 已经在刷新中，等待完成
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       refreshQueue.push(() => resolve(true));
     });
   }
