@@ -649,19 +649,37 @@ const Recipe = () => {
       >
         <View className="cooking-list">
           <View className="cooking-header-bar">
-            <Text className="cooking-title">共 {cookingList.length} 道菜</Text>
-            <View className="cooking-categories">
-              {[...new Set(cookingList.map(item => item.category))].map(
-                (cat, idx) => (
-                  <Text key={idx} className="cooking-category-tag">
-                    {getCategoryLabel(cat)}
-                  </Text>
-                )
-              )}
+            <View className="cooking-header-left">
+              <Text className="cooking-title">
+                共 {cookingList.length} 道菜
+              </Text>
+              <View className="cooking-categories">
+                {[...new Set(cookingList.map(item => item.category))].map(
+                  (cat, idx) => (
+                    <Text key={idx} className="cooking-category-tag">
+                      {getCategoryLabel(cat)}
+                    </Text>
+                  )
+                )}
+              </View>
             </View>
             {cookingList.length > 0 && (
-              <View className="clear-btn" onClick={clearCookingList}>
-                <AtIcon value="trash" size="18" color="#ff4d4f" />
+              <View className="cooking-header-actions">
+                <View
+                  className="action-btn shopping-btn"
+                  onClick={() => {
+                    setShowCookingList(false);
+                    Taro.navigateTo({ url: '/pages/recipe/shopping' });
+                  }}
+                >
+                  <Text className="action-btn-text">🛒 购物清单</Text>
+                </View>
+                <View
+                  className="action-btn clear-btn"
+                  onClick={clearCookingList}
+                >
+                  <AtIcon value="trash" size="16" color="#ff4d4f" />
+                </View>
               </View>
             )}
           </View>
@@ -718,15 +736,6 @@ const Recipe = () => {
                   </View>
                 ))}
               </ScrollView>
-              <View
-                className="generate-shopping-btn"
-                onClick={() => {
-                  setShowCookingList(false);
-                  Taro.navigateTo({ url: '/pages/recipe/shopping' });
-                }}
-              >
-                <Text className="generate-shopping-text">🛒 生成购物清单</Text>
-              </View>
             </>
           )}
         </View>

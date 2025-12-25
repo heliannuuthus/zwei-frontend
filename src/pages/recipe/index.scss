@@ -353,14 +353,23 @@
   .cooking-header-bar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 16rpx;
     padding: 0 0 20rpx;
     margin-bottom: 16rpx;
     border-bottom: 1rpx solid $border-color;
     min-height: 64rpx;
+  }
+
+  .cooking-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    flex: 1;
+    min-width: 0;
 
     .cooking-title {
-      font-size: 32rpx;
+      font-size: 30rpx;
       font-weight: 600;
       color: $text-primary;
       white-space: nowrap;
@@ -368,35 +377,57 @@
     }
 
     .cooking-categories {
-      flex: 1;
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8rpx;
+      gap: 6rpx;
     }
 
     .cooking-category-tag {
       font-size: 20rpx;
       color: $primary-color;
       background: $primary-light;
-      padding: 4rpx 12rpx;
+      padding: 4rpx 10rpx;
       border-radius: 6rpx;
       line-height: 1.4;
     }
+  }
 
-    .clear-btn {
-      padding: 12rpx;
-      border-radius: 50%;
-      background: #fff0f0;
+  .cooking-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    flex-shrink: 0;
+
+    .action-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      border-radius: 20rpx;
+      transition: all 0.2s ease;
 
       &:active {
         opacity: 0.7;
-        background: #ffe0e0;
+        transform: scale(0.95);
       }
+    }
+
+    .shopping-btn {
+      padding: 10rpx 20rpx;
+      background: $primary-color;
+
+      .action-btn-text {
+        font-size: 24rpx;
+        color: #fff;
+        font-weight: 500;
+      }
+    }
+
+    .clear-btn {
+      width: 56rpx;
+      height: 56rpx;
+      background: #fff0f0;
+      border-radius: 50%;
     }
   }
 
@@ -488,26 +519,6 @@
         border-radius: 6rpx;
       }
     }
-  }
-
-  .generate-shopping-btn {
-    margin-top: 24rpx;
-    padding: 28rpx;
-    background: $primary-color;
-    border-radius: 16rpx;
-    text-align: center;
-    transition: all 0.2s ease;
-
-    &:active {
-      opacity: 0.8;
-      transform: scale(0.98);
-    }
-  }
-
-  .generate-shopping-text {
-    font-size: 32rpx;
-    font-weight: 500;
-    color: #fff;
   }
 }
 
