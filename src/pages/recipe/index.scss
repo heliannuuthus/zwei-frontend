@@ -270,45 +270,28 @@
     }
   }
 
-  .add-to-list-btn {
-    position: absolute;
-    right: 12rpx;
-    top: 12rpx;
-    width: 44rpx;
-    height: 44rpx;
-    background: $primary-color;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    transition: all 0.2s ease;
-
-    &:active {
-      transform: scale(0.9);
-    }
-  }
-
   .card-stepper {
     position: absolute;
     right: 8rpx;
     top: 8rpx;
     display: flex;
     align-items: center;
-    gap: 2rpx;
+    gap: 0;
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 24rpx;
-    padding: 4rpx;
+    border-radius: 20rpx;
+    padding: 3rpx;
     box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
     z-index: 10;
 
-    &.compact {
-      gap: 4rpx;
+    &.single {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
     }
 
     .stepper-btn {
-      width: 36rpx;
-      height: 36rpx;
+      width: 32rpx;
+      height: 32rpx;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -324,7 +307,6 @@
 
         .stepper-btn-text {
           color: $text-secondary;
-          font-size: 24rpx;
         }
       }
 
@@ -333,7 +315,6 @@
 
         .stepper-btn-text {
           color: #ff4d4f;
-          font-size: 22rpx;
         }
       }
 
@@ -342,7 +323,6 @@
 
         .stepper-btn-text {
           color: #fff;
-          font-size: 24rpx;
         }
 
         &.disabled {
@@ -352,16 +332,18 @@
     }
 
     .stepper-btn-text {
+      font-size: 22rpx;
       font-weight: 400;
       line-height: 1;
     }
 
     .stepper-num {
-      min-width: 32rpx;
+      min-width: 28rpx;
       text-align: center;
-      font-size: 24rpx;
+      font-size: 20rpx;
       font-weight: 600;
       color: $text-primary;
+      padding: 0 2rpx;
     }
   }
 }

@@ -581,35 +581,13 @@ const Recipe = () => {
                       if (!listItem) {
                         return (
                           <View
-                            className="add-to-list-btn"
+                            className="card-stepper single"
                             onClick={e => {
                               e.stopPropagation();
                               handleAddClick(recipe);
                             }}
                           >
-                            <AtIcon value="add" size="14" color="#fff" />
-                          </View>
-                        );
-                      }
-                      if (listItem.servings === 1) {
-                        return (
-                          <View className="card-stepper compact">
-                            <View
-                              className="stepper-btn remove"
-                              onClick={e => {
-                                e.stopPropagation();
-                                removeFromList(recipe.id);
-                              }}
-                            >
-                              <Text className="stepper-btn-text">×</Text>
-                            </View>
-                            <View
-                              className="stepper-btn plus"
-                              onClick={e => {
-                                e.stopPropagation();
-                                updateServings(recipe.id, 1);
-                              }}
-                            >
+                            <View className="stepper-btn plus">
                               <Text className="stepper-btn-text">+</Text>
                             </View>
                           </View>
@@ -618,13 +596,19 @@ const Recipe = () => {
                       return (
                         <View className="card-stepper">
                           <View
-                            className="stepper-btn minus"
+                            className={`stepper-btn ${listItem.servings === 1 ? 'remove' : 'minus'}`}
                             onClick={e => {
                               e.stopPropagation();
-                              updateServings(recipe.id, -1);
+                              if (listItem.servings === 1) {
+                                removeFromList(recipe.id);
+                              } else {
+                                updateServings(recipe.id, -1);
+                              }
                             }}
                           >
-                            <Text className="stepper-btn-text">−</Text>
+                            <Text className="stepper-btn-text">
+                              {listItem.servings === 1 ? '×' : '−'}
+                            </Text>
                           </View>
                           <Text className="stepper-num">
                             {listItem.servings}
