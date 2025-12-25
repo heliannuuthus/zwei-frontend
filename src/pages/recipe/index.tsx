@@ -363,6 +363,22 @@ const Recipe = () => {
     [cookingList]
   );
 
+  // 更新菜单项份数
+  const updateServings = useCallback(
+    (recipeId: string, delta: number) => {
+      const newList = cookingList.map(item => {
+        if (item.id === recipeId) {
+          const newServings = Math.max(1, item.servings + delta);
+          return { ...item, servings: newServings };
+        }
+        return item;
+      });
+      setCookingList(newList);
+      saveCookingList(newList);
+    },
+    [cookingList]
+  );
+
   // 清空今日菜单
   const clearCookingList = useCallback(() => {
     Taro.showModal({
@@ -695,43 +711,68 @@ const Recipe = () => {
             <>
               <ScrollView className="cooking-scroll" scrollY>
                 {cookingList.map(item => (
-                  <View
-                    key={item.id}
-                    className="cooking-item"
-                    onClick={() => {
-                      setShowCookingList(false);
-                      navigateToDetail(item.id);
-                    }}
-                  >
-                    <View className="cooking-item-image">
-                      {item.image_path ? (
-                        <Image
-                          src={item.image_path}
-                          className="cooking-image"
-                          mode="aspectFill"
-                        />
-                      ) : (
-                        <View className="cooking-image-placeholder">🍽️</View>
-                      )}
-                    </View>
-                    <View className="cooking-item-info">
-                      <View className="cooking-item-name-row">
+                  <View key={item.id} className="cooking-item">
+                    <View
+                      className="cooking-item-main"
+                      onClick={() => {
+                        setShowCookingList(false);
+                        navigateToDetail(item.id);
+                      }}
+                    >
+                      <View className="cooking-item-image">
+                        {item.image_path ? (
+                          <Image
+                            src={item.image_path}
+                            className="cooking-image"
+                            mode="aspectFill"
+                          />
+                        ) : (
+                          <View className="cooking-image-placeholder">🍽️</View>
+                        )}
+                      </View>
+                      <View className="cooking-item-info">
                         <Text className="cooking-item-name">{item.name}</Text>
-                        <Text className="cooking-item-servings">
-                          {item.servings}人份
+                        {item.tags && flattenTags(item.tags).length > 0 && (
+                          <View className="cooking-item-tags">
+                            {flattenTags(item.tags)
+                              .slice(0, 2)
+                              .map((tag, idx) => (
+                                <Text key={idx} className="cooking-item-tag">
+                                  {tag}
+                                </Text>
+                              ))}
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    <View className="cooking-item-stepper">
+                      <View
+                        className={`stepper-btn minus ${item.servings <= 1 ? 'disabled' : ''}`}
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (item.servings <= 1) {
+                            removeFromList(item.id);
+                          } else {
+                            updateServings(item.id, -1);
+                          }
+                        }}
+                      >
+                        <Text className="stepper-btn-text">
+                          {item.servings <= 1 ? '×' : '−'}
                         </Text>
                       </View>
-                      {item.tags && flattenTags(item.tags).length > 0 && (
-                        <View className="cooking-item-tags">
-                          {flattenTags(item.tags)
-                            .slice(0, 3)
-                            .map((tag, idx) => (
-                              <Text key={idx} className="cooking-item-tag">
-                                {tag}
-                              </Text>
-                            ))}
-                        </View>
-                      )}
+                      <View className="stepper-value">
+                        <Text className="stepper-num">{item.servings}</Text>
+                      </View>
+                      <View
+                        className="stepper-btn plus"
+                        onClick={e => {
+                          e.stopPropagation();
+                          updateServings(item.id, 1);
+                        }}
+                      >
+                        <Text className="stepper-btn-text">+</Text>
+                      </View>
                     </View>
                   </View>
                 ))}
