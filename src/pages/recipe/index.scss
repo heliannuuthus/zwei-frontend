@@ -302,6 +302,10 @@
     box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
     z-index: 10;
 
+    &.compact {
+      gap: 4rpx;
+    }
+
     .stepper-btn {
       width: 36rpx;
       height: 36rpx;
@@ -324,12 +328,25 @@
         }
       }
 
+      &.remove {
+        background: #ffebe6;
+
+        .stepper-btn-text {
+          color: #ff4d4f;
+          font-size: 22rpx;
+        }
+      }
+
       &.plus {
         background: $primary-color;
 
         .stepper-btn-text {
           color: #fff;
           font-size: 24rpx;
+        }
+
+        &.disabled {
+          opacity: 0.4;
         }
       }
     }

@@ -328,12 +328,12 @@ const Recipe = () => {
     [cookingList]
   );
 
-  // 更新菜单项份数
+  // 更新菜单项份数（最多99份）
   const updateServings = useCallback(
     (recipeId: string, delta: number) => {
       const newList = cookingList.map(item => {
         if (item.id === recipeId) {
-          const newServings = Math.max(1, item.servings + delta);
+          const newServings = Math.min(99, Math.max(1, item.servings + delta));
           return { ...item, servings: newServings };
         }
         return item;
@@ -574,50 +574,75 @@ const Recipe = () => {
                       </View>
                     </View>
                     {/* 添加/调整份数 */}
-                    {inList ? (
-                      <View className="card-stepper">
-                        <View
-                          className="stepper-btn minus"
-                          onClick={e => {
-                            e.stopPropagation();
-                            const item = cookingList.find(
-                              i => i.id === recipe.id
-                            );
-                            if (item && item.servings <= 1) {
-                              removeFromList(recipe.id);
-                            } else {
+                    {(() => {
+                      const listItem = cookingList.find(
+                        i => i.id === recipe.id
+                      );
+                      if (!listItem) {
+                        return (
+                          <View
+                            className="add-to-list-btn"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleAddClick(recipe);
+                            }}
+                          >
+                            <AtIcon value="add" size="14" color="#fff" />
+                          </View>
+                        );
+                      }
+                      if (listItem.servings === 1) {
+                        return (
+                          <View className="card-stepper compact">
+                            <View
+                              className="stepper-btn remove"
+                              onClick={e => {
+                                e.stopPropagation();
+                                removeFromList(recipe.id);
+                              }}
+                            >
+                              <Text className="stepper-btn-text">×</Text>
+                            </View>
+                            <View
+                              className="stepper-btn plus"
+                              onClick={e => {
+                                e.stopPropagation();
+                                updateServings(recipe.id, 1);
+                              }}
+                            >
+                              <Text className="stepper-btn-text">+</Text>
+                            </View>
+                          </View>
+                        );
+                      }
+                      return (
+                        <View className="card-stepper">
+                          <View
+                            className="stepper-btn minus"
+                            onClick={e => {
+                              e.stopPropagation();
                               updateServings(recipe.id, -1);
-                            }
-                          }}
-                        >
-                          <Text className="stepper-btn-text">
-                            {cookingList.find(i => i.id === recipe.id)
-                              ?.servings === 1
-                              ? '×'
-                              : '−'}
+                            }}
+                          >
+                            <Text className="stepper-btn-text">−</Text>
+                          </View>
+                          <Text className="stepper-num">
+                            {listItem.servings}
                           </Text>
+                          <View
+                            className={`stepper-btn plus ${listItem.servings >= 99 ? 'disabled' : ''}`}
+                            onClick={e => {
+                              e.stopPropagation();
+                              if (listItem.servings < 99) {
+                                updateServings(recipe.id, 1);
+                              }
+                            }}
+                          >
+                            <Text className="stepper-btn-text">+</Text>
+                          </View>
                         </View>
-                        <Text className="stepper-num">
-                          {cookingList.find(i => i.id === recipe.id)?.servings}
-                        </Text>
-                        <View
-                          className="stepper-btn plus"
-                          onClick={e => {
-                            e.stopPropagation();
-                            updateServings(recipe.id, 1);
-                          }}
-                        >
-                          <Text className="stepper-btn-text">+</Text>
-                        </View>
-                      </View>
-                    ) : (
-                      <View
-                        className="add-to-list-btn"
-                        onClick={() => handleAddClick(recipe)}
-                      >
-                        <AtIcon value="add" size="14" color="#fff" />
-                      </View>
-                    )}
+                      );
+                    })()}
                   </View>
                 );
               })}
