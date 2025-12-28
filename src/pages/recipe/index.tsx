@@ -384,14 +384,6 @@ const Recipe = () => {
     );
   }, [categoryData, currentCategory]);
 
-  // 检查菜谱是否在菜单中
-  const isInCookingList = useCallback(
-    (recipeId: string) => {
-      return cookingList.some(item => item.id === recipeId);
-    },
-    [cookingList]
-  );
-
   // 根据分类 key 获取中文名称
   const getCategoryLabel = useCallback(
     (key: string) => {
@@ -483,7 +475,6 @@ const Recipe = () => {
           {currentCategoryData.recipes.length > 0 && (
             <View className="recipe-grid">
               {currentCategoryData.recipes.map(recipe => {
-                const inList = isInCookingList(recipe.id);
                 return (
                   <View key={recipe.id} className="recipe-card">
                     {/* 可点击区域 */}

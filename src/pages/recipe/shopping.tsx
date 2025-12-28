@@ -58,10 +58,6 @@ const ProgressRing = ({
   size?: number;
   strokeWidth?: number;
 }) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - progress);
-
   return (
     <View className="progress-ring" style={{ width: size, height: size }}>
       <View
