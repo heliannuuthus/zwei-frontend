@@ -1,6 +1,6 @@
 {
-  "libVersion": "3.11.1",
-  "projectname": "choosy",
+  "libVersion": "3.13.1",
+  "projectname": "choosy-frontend",
   "condition": {},
   "setting": {
     "urlCheck": false,

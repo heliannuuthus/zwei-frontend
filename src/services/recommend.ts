@@ -246,3 +246,61 @@ export function getWeatherTheme(weather: string): WeatherTheme {
 export function getWeatherIcon(weather: string): string {
   return getWeatherTheme(weather).icon;
 }
+
+// === LLM 推荐相关 ===
+
+/**
+ * 推荐请求参数
+ */
+export interface RecommendRequest {
+  latitude: number;
+  longitude: number;
+  timestamp?: number;
+}
+
+/**
+ * 推荐响应
+ */
+export interface RecommendResponse {
+  recipes: Array<{
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    difficulty: number;
+    tags: Record<string, string[]>;
+    image_path: string;
+    total_time_minutes: number;
+  }>;
+  reason: string; // LLM 生成的推荐理由
+  weather: {
+    temperature: number;
+    humidity: number;
+    weather: string;
+    city?: string;
+  } | null;
+  meal_time: string;
+  season: string;
+  temperature: string;
+}
+
+/**
+ * 获取 LLM 推荐（支持可选登录）
+ */
+export async function getRecommendations(
+  location: LocationInfo,
+  limit: number = 6
+): Promise<RecommendResponse> {
+  return request<RecommendResponse>(
+    `/api/recommend?limit=${limit}`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        timestamp: Date.now(),
+      }),
+    },
+    { requireAuth: false } // 可选登录
+  );
+}

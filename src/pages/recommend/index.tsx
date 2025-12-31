@@ -5,15 +5,18 @@ import Taro from '@tarojs/taro';
 import {
   getFuzzyLocation,
   getContext,
+  getRecommendations,
   getMealTimeName,
   getSeasonName,
   getWeatherTheme,
   checkLocationAuth,
   ContextResponse,
+  RecommendResponse,
   LocationInfo,
   LocationAuthStatus,
 } from '../../services/recommend';
 import { wxLogin, isLoggedIn, ensureValidToken } from '../../services/user';
+import RecipeCard from '../../components/RecipeCard/index';
 import './index.scss';
 
 // 页面状态
@@ -105,6 +108,10 @@ const Recommend = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [locationAuthStatus, setLocationAuthStatus] =
     useState<LocationAuthStatus>('not_determined');
+  
+  // AI 推荐相关状态
+  const [aiRecommendations, setAiRecommendations] = useState<RecommendResponse | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   // 静默登录，确保有有效 token
   const ensureLogin = useCallback(async (): Promise<boolean> => {
@@ -216,6 +223,48 @@ const Recommend = () => {
     await refresh();
   }, [refresh]);
 
+  // 生成 AI 推荐
+  const generateAiRecommendations = useCallback(async () => {
+    if (!location) {
+      Taro.showToast({ title: '请先获取位置信息', icon: 'none' });
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      Taro.showLoading({ title: 'AI 生成中...', mask: true });
+
+      // 确保登录（可选）
+      try {
+        await ensureLogin();
+      } catch (err) {
+        console.log('[AI Recommend] 游客模式');
+      }
+
+      // 调用 AI 推荐 API
+      const result = await getRecommendations(location, 6);
+      setAiRecommendations(result);
+      
+      Taro.hideLoading();
+      Taro.showToast({ title: '推荐成功', icon: 'success', duration: 1500 });
+      
+      // 滚动到推荐结果
+      setTimeout(() => {
+        Taro.pageScrollTo({ scrollTop: 500, duration: 300 });
+      }, 100);
+    } catch (err: any) {
+      console.error('[AI Recommend] 生成失败:', err);
+      Taro.hideLoading();
+      Taro.showToast({ 
+        title: err.message || '生成失败，请重试', 
+        icon: 'none',
+        duration: 2000
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  }, [location, ensureLogin]);
+
   useEffect(() => {
     init();
   }, [init]);
@@ -250,11 +299,6 @@ const Recommend = () => {
       onRefresherRefresh={onRefresh}
       refresherBackground="#FFF9F5"
     >
-      {/* 下拉刷新提示 */}
-      <View className="pull-hint">
-        <Text className="hint-text">下拉刷新推荐信息</Text>
-      </View>
-
       {/* 天气卡片 */}
       {context && (
         <View className="weather-card">
@@ -325,13 +369,93 @@ const Recommend = () => {
         </View>
       )}
 
-      {/* 推荐功能开发中提示 */}
-      <View className="coming-soon">
-        <View className="coming-soon-icon">🚧</View>
-        <Text className="coming-soon-title">智能推荐功能开发中</Text>
-        <Text className="coming-soon-desc">
-          我们将根据您的位置、天气和时间， 为您推荐最适合的菜品，敬请期待！
-        </Text>
+      {/* AI 智能推荐功能 */}
+      <View className="ai-recommend-section">
+        <View className="section-header">
+          <View className="header-badge">
+            <Text className="badge-icon">✨</Text>
+            <Text className="badge-text">AI 推荐</Text>
+          </View>
+          <Text className="section-title">智能美食推荐</Text>
+          <Text className="section-desc">
+            基于您的口味偏好 · 当前天气 · 用餐时段
+          </Text>
+        </View>
+
+        {!aiRecommendations ? (
+          <View className="generate-container">
+            {/* 特性标签云 */}
+            <View className="features-cloud">
+              <View className="feature-tag">🎯 个性化</View>
+              <View className="feature-tag">🌈 多样化</View>
+              <View className="feature-tag">⚡ 即时生成</View>
+            </View>
+
+            {/* 智能生成按钮 */}
+            <View 
+              className={`smart-generate-btn ${aiLoading ? 'loading' : ''}`}
+              onClick={generateAiRecommendations}
+            >
+              {/* 背景光晕效果 */}
+              <View className="btn-glow" />
+              
+              {/* 按钮内容 */}
+              <View className="btn-content">
+                {aiLoading ? (
+                  <>
+                    <View className="loading-spinner">
+                      <View className="spinner-ring" />
+                      <View className="spinner-ring" />
+                      <View className="spinner-ring" />
+                    </View>
+                    <View className="btn-text-group">
+                      <Text className="btn-main-text">AI 正在思考</Text>
+                      <Text className="btn-sub-text">为您精选美味...</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View className="btn-icon-wrapper">
+                      <Text className="btn-icon">🎨</Text>
+                      <View className="icon-pulse" />
+                    </View>
+                    <View className="btn-text-group">
+                      <Text className="btn-main-text">生成专属推荐</Text>
+                      <Text className="btn-sub-text">点击开启美食之旅</Text>
+                    </View>
+                    <Text className="btn-arrow">→</Text>
+                  </>
+                )}
+              </View>
+
+              {/* 装饰性粒子 */}
+              <View className="particle particle-1">✨</View>
+              <View className="particle particle-2">💫</View>
+              <View className="particle particle-3">⭐</View>
+            </View>
+          </View>
+        ) : (
+          <View className="ai-results">
+            {/* 推荐理由 */}
+            {aiRecommendations.reason && (
+              <View className="reason-card">
+                <Text className="reason-icon">💡</Text>
+                <Text className="reason-text">{aiRecommendations.reason}</Text>
+              </View>
+            )}
+
+            {/* 推荐菜谱列表 */}
+            <View className="recipes-grid">
+              {aiRecommendations.recipes.map((recipe) => (
+                <RecipeCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  layout="grid"
+                />
+              ))}
+            </View>
+          </View>
+        )}
       </View>
 
       {/* 底部间距 */}

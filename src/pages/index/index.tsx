@@ -11,12 +11,11 @@ import { AtIcon, AtRate } from 'taro-ui';
 import Taro from '@tarojs/taro';
 import {
   getBanners,
-  getRecommendRecipes,
   getHotRecipes,
   BannerItem,
 } from '../../services/home';
 import { RecipeListItem } from '../../services/recipe';
-import { getCategoryColor, getCategoryLabel } from '../../utils/category';
+import RecipeCard from '../../components/RecipeCard/index';
 import './index.scss';
 
 // 骨架屏组件
@@ -50,22 +49,17 @@ const HomeSkeleton = () => (
 const Index = () => {
   const [loading, setLoading] = useState(true);
   const [banners, setBanners] = useState<BannerItem[]>([]);
-  const [recommendRecipes, setRecommendRecipes] = useState<RecipeListItem[]>(
-    []
-  );
   const [hotRecipes, setHotRecipes] = useState<RecipeListItem[]>([]);
 
   const loadHomeData = useCallback(async () => {
     setLoading(true);
     try {
-      // 并行请求三个接口
-      const [bannersData, recommendData, hotData] = await Promise.all([
+      // 并行请求两个接口
+      const [bannersData, hotData] = await Promise.all([
         getBanners().catch(() => []),
-        getRecommendRecipes(4).catch(() => []),
         getHotRecipes(6).catch(() => []),
       ]);
       setBanners(bannersData || []);
-      setRecommendRecipes(recommendData || []);
       setHotRecipes(hotData || []);
     } catch (error) {
       console.error('加载首页数据失败:', error);
@@ -97,11 +91,6 @@ const Index = () => {
     },
     [navigateToRecipeDetail]
   );
-
-  // 格式化菜谱名称（去掉"的做法"后缀）
-  const formatRecipeName = useCallback((name: string) => {
-    return name.replace(/的做法$/, '');
-  }, []);
 
   useEffect(() => {
     loadHomeData();
@@ -191,89 +180,6 @@ const Index = () => {
         </View>
       </View>
 
-      {/* 今日推荐 */}
-      {recommendRecipes.length > 0 && (
-        <View className="section">
-          <View className="section-header">
-            <Text className="section-title">✨ 今日推荐</Text>
-            <Text className="section-more" onClick={navigateToRecommend}>
-              更多 <AtIcon value="chevron-right" size="14" color="#999" />
-            </Text>
-          </View>
-          <ScrollView className="recommend-scroll" scrollX>
-            {recommendRecipes.map(recipe => (
-              <View
-                key={recipe.id}
-                className="recommend-card"
-                onClick={() => navigateToRecipeDetail(recipe.id)}
-              >
-                <View className="recommend-image-wrapper">
-                  {recipe.image_path ? (
-                    <Image
-                      src={recipe.image_path}
-                      className="recommend-image"
-                      mode="aspectFill"
-                    />
-                  ) : (
-                    <View className="recommend-image-placeholder">
-                      <Text className="placeholder-icon">📷</Text>
-                      <Text className="placeholder-text">暂无图片</Text>
-                    </View>
-                  )}
-                  <View
-                    className="recommend-category"
-                    style={{
-                      backgroundColor: getCategoryColor(recipe.category),
-                    }}
-                  >
-                    {getCategoryLabel(recipe.category)}
-                  </View>
-                </View>
-                <View className="recommend-info">
-                  <Text className="recommend-name">
-                    {formatRecipeName(recipe.name)}
-                  </Text>
-                  {recipe.tags && (
-                    <ScrollView
-                      className="recommend-tags"
-                      scrollX
-                      enhanced
-                      showScrollbar={false}
-                    >
-                      <View className="tags-inner">
-                        {recipe.tags.cuisines?.map((tag, idx) => (
-                          <Text key={`c-${idx}`} className="tag tag-cuisine">
-                            {tag}
-                          </Text>
-                        ))}
-                        {recipe.tags.flavors?.map((tag, idx) => (
-                          <Text key={`f-${idx}`} className="tag tag-flavor">
-                            {tag}
-                          </Text>
-                        ))}
-                        {recipe.tags.scenes?.map((tag, idx) => (
-                          <Text key={`s-${idx}`} className="tag tag-scene">
-                            {tag}
-                          </Text>
-                        ))}
-                      </View>
-                    </ScrollView>
-                  )}
-                  <View className="recommend-meta">
-                    <AtRate value={recipe.difficulty} max={5} size={10} />
-                    {recipe.total_time_minutes && (
-                      <Text className="recommend-time">
-                        {recipe.total_time_minutes}分钟
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
       {/* 热门菜谱 */}
       {hotRecipes.length > 0 && (
         <View className="section">
@@ -288,80 +194,18 @@ const Index = () => {
           </View>
           <View className="recipe-grid">
             {hotRecipes.map(recipe => (
-              <View
+              <RecipeCard
                 key={recipe.id}
-                className="recipe-item"
-                onClick={() => navigateToRecipeDetail(recipe.id)}
-              >
-                <View className="recipe-image-wrapper">
-                  {recipe.image_path ? (
-                    <Image
-                      src={recipe.image_path}
-                      className="recipe-image"
-                      mode="aspectFill"
-                    />
-                  ) : (
-                    <View className="recipe-image-placeholder">
-                      <Text className="placeholder-icon">📷</Text>
-                      <Text className="placeholder-text">暂无图片</Text>
-                    </View>
-                  )}
-                  <View
-                    className="recipe-category"
-                    style={{
-                      backgroundColor: getCategoryColor(recipe.category),
-                    }}
-                  >
-                    {getCategoryLabel(recipe.category)}
-                  </View>
-                </View>
-                <View className="recipe-info">
-                  <Text className="recipe-name">
-                    {formatRecipeName(recipe.name)}
-                  </Text>
-                  {recipe.tags && (
-                    <ScrollView
-                      className="recipe-tags"
-                      scrollX
-                      enhanced
-                      showScrollbar={false}
-                    >
-                      <View className="tags-inner">
-                        {recipe.tags.cuisines?.map((tag, idx) => (
-                          <Text key={`c-${idx}`} className="tag tag-cuisine">
-                            {tag}
-                          </Text>
-                        ))}
-                        {recipe.tags.flavors?.map((tag, idx) => (
-                          <Text key={`f-${idx}`} className="tag tag-flavor">
-                            {tag}
-                          </Text>
-                        ))}
-                        {recipe.tags.scenes?.map((tag, idx) => (
-                          <Text key={`s-${idx}`} className="tag tag-scene">
-                            {tag}
-                          </Text>
-                        ))}
-                      </View>
-                    </ScrollView>
-                  )}
-                  <View className="recipe-meta">
-                    <AtRate value={recipe.difficulty} max={5} size={10} />
-                    {recipe.total_time_minutes && (
-                      <Text className="recipe-time">
-                        {recipe.total_time_minutes}分钟
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              </View>
+                recipe={recipe}
+                layout="grid"
+              />
             ))}
           </View>
         </View>
       )}
 
       {/* 空状态 */}
-      {recommendRecipes.length === 0 && hotRecipes.length === 0 && (
+      {hotRecipes.length === 0 && (
         <View className="empty-state">
           <View className="empty-icon">🍳</View>
           <Text className="empty-text">暂无菜谱数据</Text>

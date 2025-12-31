@@ -17,6 +17,7 @@ import {
   Category,
 } from '../../services/recipe';
 import { getCategoryColor } from '../../utils/category';
+import RecipeCard from '../../components/RecipeCard/index';
 import checklistIcon from '../../assets/icons/checklist.svg';
 import './index.scss';
 
@@ -493,7 +494,7 @@ const Recipe = () => {
                           />
                         ) : (
                           <View className="image-placeholder">
-                            <Text className="placeholder-icon">📷</Text>
+                            <Text className="placeholder-icon">🍳</Text>
                             <Text className="placeholder-text">暂无图片</Text>
                           </View>
                         )}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, Image } from '@tarojs/components';
+import { View, Text, ScrollView, Image, Canvas } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { AtIcon, AtActivityIndicator } from 'taro-ui';
 import { getRecipeDetail, RecipeDetail } from '../../services/recipe';
@@ -48,7 +48,7 @@ const getCookingList = (): CookingListItem[] => {
   }
 };
 
-// 环形进度条组件
+// 环形进度条组件 - 使用 Canvas 实现圆角端点
 const ProgressRing = ({
   progress,
   size = 120,
@@ -58,60 +58,69 @@ const ProgressRing = ({
   size?: number;
   strokeWidth?: number;
 }) => {
+  const canvasId = 'progress-ring-canvas';
   const progressPercent = Math.min(Math.max(progress, 0), 1);
-  const angle = progressPercent * 360;
-  const isOverHalf = progressPercent > 0.5;
+
+  useEffect(() => {
+    const drawProgress = () => {
+      const query = Taro.createSelectorQuery();
+      query
+        .select(`#${canvasId}`)
+        .fields({ node: true, size: true })
+        .exec(res => {
+          if (!res[0]?.node) return;
+
+          const canvas = res[0].node;
+          const ctx = canvas.getContext('2d');
+          const dpr = Taro.getSystemInfoSync().pixelRatio;
+
+          // 设置 canvas 实际像素尺寸
+          canvas.width = size * dpr;
+          canvas.height = size * dpr;
+          ctx.scale(dpr, dpr);
+
+          const centerX = size / 2;
+          const centerY = size / 2;
+          const radius = (size - strokeWidth) / 2;
+
+          // 清除画布
+          ctx.clearRect(0, 0, size, size);
+
+          // 绘制背景轨道
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.lineWidth = strokeWidth;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          // 绘制进度弧线
+          if (progressPercent > 0) {
+            const startAngle = -Math.PI / 2; // 从顶部开始
+            const endAngle = startAngle + Math.PI * 2 * progressPercent;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = strokeWidth;
+            ctx.lineCap = 'round'; // 圆角端点
+            ctx.stroke();
+          }
+        });
+    };
+
+    // 延迟绘制确保 canvas 已挂载
+    setTimeout(drawProgress, 100);
+  }, [progressPercent, size, strokeWidth]);
 
   return (
     <View className="progress-ring" style={{ width: size, height: size }}>
-      <View
-        className="progress-ring-bg"
-        style={{
-          width: size,
-          height: size,
-          borderWidth: strokeWidth,
-          borderRadius: size / 2,
-        }}
+      <Canvas
+        type="2d"
+        id={canvasId}
+        className="progress-ring-canvas"
+        style={{ width: size, height: size }}
       />
-      {/* 右半圆：0-180度 */}
-      <View className="progress-ring-wrapper progress-ring-wrapper-right">
-        <View
-          className="progress-ring-fill"
-          style={{
-            width: size,
-            height: size,
-            borderWidth: strokeWidth,
-            borderRadius: size / 2,
-            borderTopColor: isOverHalf ? '#fff' : 'transparent',
-            borderRightColor: '#fff',
-            borderBottomColor: isOverHalf ? '#fff' : 'transparent',
-            borderLeftColor: 'transparent',
-            transform: `rotate(${-90 + Math.min(angle, 180)}deg)`,
-            left: `-${size / 2}px`,
-            opacity: angle > 0 ? 1 : 0,
-          }}
-        />
-      </View>
-      {/* 左半圆：180-360度 */}
-      {isOverHalf && (
-        <View className="progress-ring-wrapper progress-ring-wrapper-left">
-          <View
-            className="progress-ring-fill"
-            style={{
-              width: size,
-              height: size,
-              borderWidth: strokeWidth,
-              borderRadius: size / 2,
-              borderTopColor: 'transparent',
-              borderRightColor: 'transparent',
-              borderBottomColor: '#fff',
-              borderLeftColor: '#fff',
-              transform: `rotate(${-90 + (angle - 180)}deg)`,
-              left: 0,
-            }}
-          />
-        </View>
-      )}
       <View className="progress-ring-center">
         <Text className="progress-percent">
           {Math.round(progressPercent * 100)}%
@@ -131,6 +140,14 @@ const ShoppingPage = () => {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set()
   );
+  // 记录当前活跃的分类（用于高亮显示）
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  // 记录正在执行动画的食材（用于淡出动画）
+  const [animatingItem, setAnimatingItem] = useState<string | null>(null);
+  // 记录刚完成移动的食材（用于淡入动画）
+  const [movedItem, setMovedItem] = useState<string | null>(null);
+  // 记录刚完成的分类（用于下沉动画）
+  const [completingCategory, setCompletingCategory] = useState<string | null>(null);
 
   useEffect(() => {
     const loadRecipeDetails = async () => {
@@ -250,17 +267,95 @@ const ShoppingPage = () => {
     };
   }, [groupedIngredients, checkedItems]);
 
-  const toggleCheck = useCallback((name: string) => {
-    setCheckedItems(prev => {
-      const next = new Set(prev);
-      if (next.has(name)) {
-        next.delete(name);
-      } else {
-        next.add(name);
-      }
-      return next;
-    });
-  }, []);
+  // 排序后的分类列表
+  const sortedGroups = useMemo(() => {
+    return [...groupedIngredients]
+      .map(group => {
+        // 计算分类完成状态
+        const groupCheckedCount = group.items.filter(item =>
+          checkedItems.has(item.name)
+        ).length;
+        const isAllChecked = groupCheckedCount === group.items.length;
+
+        // 对分类内的食材排序：未完成的在前，已完成的在后
+        const sortedItems = [...group.items].sort((a, b) => {
+          const aChecked = checkedItems.has(a.name);
+          const bChecked = checkedItems.has(b.name);
+          if (aChecked === bChecked) return 0;
+          return aChecked ? 1 : -1;
+        });
+
+        return {
+          ...group,
+          items: sortedItems,
+          isAllChecked,
+        };
+      })
+      .sort((a, b) => {
+        // 全部完成的分类放到最后（保持其他分类原有顺序）
+        if (a.isAllChecked && !b.isAllChecked) return 1;
+        if (!a.isAllChecked && b.isAllChecked) return -1;
+        return 0;
+      });
+  }, [groupedIngredients, checkedItems]);
+
+  const toggleCheck = useCallback(
+    (name: string, categoryKey: string) => {
+      // 设置当前活跃分类（高亮效果）
+      setActiveCategory(categoryKey);
+
+      // 先播放淡出动画
+      setAnimatingItem(name);
+
+      // 动画结束后更新状态
+      setTimeout(() => {
+        setCheckedItems(prev => {
+          const next = new Set(prev);
+          const wasChecked = next.has(name);
+
+          if (wasChecked) {
+            next.delete(name);
+          } else {
+            next.add(name);
+          }
+
+          // 检查该分类是否即将全部完成
+          const group = groupedIngredients.find(
+            g => g.category.key === categoryKey
+          );
+          if (group && !wasChecked) {
+            const willBeAllChecked = group.items.every(
+              item => item.name === name || next.has(item.name)
+            );
+            if (willBeAllChecked) {
+              // 触发分类完成动画
+              setCompletingCategory(categoryKey);
+              setTimeout(() => {
+                setCompletingCategory(null);
+              }, 600);
+            }
+          }
+
+          return next;
+        });
+
+        // 清除淡出动画，设置淡入动画
+        setAnimatingItem(null);
+        setMovedItem(name);
+
+        // 淡入动画结束后清除状态
+        setTimeout(() => {
+          setMovedItem(null);
+        }, 300);
+      }, 200);
+
+      // 活跃状态在一段时间后自动清除
+      setTimeout(() => {
+        setActiveCategory(prev => (prev === categoryKey ? null : prev));
+      }, 3000);
+    },
+    [groupedIngredients]
+  );
 
   const toggleGroupCollapse = useCallback((categoryKey: string) => {
     setCollapsedGroups(prev => {
@@ -277,6 +372,10 @@ const ShoppingPage = () => {
   const toggleGroupCheck = useCallback(
     (group: GroupedIngredients) => {
       const allChecked = group.items.every(item => checkedItems.has(item.name));
+
+      // 设置当前活跃分类
+      setActiveCategory(group.category.key);
+
       setCheckedItems(prev => {
         const next = new Set(prev);
         group.items.forEach(item => {
@@ -288,6 +387,21 @@ const ShoppingPage = () => {
         });
         return next;
       });
+
+      // 如果是全选操作，触发分类完成动画
+      if (!allChecked) {
+        setCompletingCategory(group.category.key);
+        setTimeout(() => {
+          setCompletingCategory(null);
+        }, 600);
+      }
+
+      // 活跃状态在一段时间后自动清除
+      setTimeout(() => {
+        setActiveCategory(prev =>
+          prev === group.category.key ? null : prev
+        );
+      }, 3000);
     },
     [checkedItems]
   );
@@ -353,15 +467,21 @@ const ShoppingPage = () => {
 
       <ScrollView className="shopping-scroll" scrollY>
         {/* 分类食材列表 */}
-        {groupedIngredients.map(group => {
+        {sortedGroups.map(group => {
           const isCollapsed = collapsedGroups.has(group.category.key);
           const groupCheckedCount = group.items.filter(item =>
             checkedItems.has(item.name)
           ).length;
           const isAllChecked = groupCheckedCount === group.items.length;
 
+          const isActive = activeCategory === group.category.key;
+          const isCompleting = completingCategory === group.category.key;
+
           return (
-            <View key={group.category.key} className="ingredient-group">
+            <View
+              key={group.category.key}
+              className={`ingredient-group ${isAllChecked ? 'completed' : ''} ${isActive ? 'active' : ''} ${isCompleting ? 'completing' : ''}`}
+            >
               {/* 分组头部 */}
               <View
                 className="group-header"
@@ -378,6 +498,9 @@ const ShoppingPage = () => {
                       {groupCheckedCount}/{group.items.length}
                     </Text>
                   </View>
+                  {isAllChecked && (
+                    <Text className="group-complete-tag">✓ 已完成</Text>
+                  )}
                 </View>
                 <View className="group-actions">
                   <View
@@ -402,63 +525,56 @@ const ShoppingPage = () => {
               {/* 食材列表 */}
               {!isCollapsed && (
                 <View className="group-items">
-                  {[...group.items]
-                    .sort((a, b) => {
-                      const aChecked = checkedItems.has(a.name);
-                      const bChecked = checkedItems.has(b.name);
-                      if (aChecked === bChecked) return 0;
-                      return aChecked ? 1 : -1;
-                    })
-                    .map(item => {
-                      const isChecked = checkedItems.has(item.name);
-                      return (
+                  {group.items.map(item => {
+                    const isChecked = checkedItems.has(item.name);
+                    const isAnimatingOut = animatingItem === item.name;
+                    const isAnimatingIn = movedItem === item.name;
+                    return (
+                      <View
+                        key={item.name}
+                        className={`ingredient-card ${isChecked ? 'checked' : ''} ${isAnimatingOut ? 'slide-out-left' : ''} ${isAnimatingIn ? 'slide-in-right' : ''}`}
+                        onClick={() => !isAnimatingOut && toggleCheck(item.name, group.category.key)}
+                      >
                         <View
-                          key={item.name}
-                          className={`ingredient-card ${isChecked ? 'checked' : ''}`}
-                          onClick={() => toggleCheck(item.name)}
+                          className={`check-circle ${isChecked ? 'checked' : ''}`}
+                          style={{
+                            borderColor: isChecked
+                              ? group.category.color
+                              : '#ddd',
+                            backgroundColor: isChecked
+                              ? group.category.color
+                              : 'transparent',
+                          }}
                         >
-                          <View
-                            className={`check-circle ${isChecked ? 'checked' : ''}`}
-                            style={{
-                              borderColor: isChecked
-                                ? group.category.color
-                                : '#ddd',
-                              backgroundColor: isChecked
-                                ? group.category.color
-                                : 'transparent',
-                            }}
-                          >
-                            {isChecked && (
-                              <AtIcon value="check" size="14" color="#fff" />
-                            )}
-                          </View>
-                          <View className="ingredient-info">
-                            <View className="ingredient-main">
-                              <Text className="ingredient-name">
-                                {item.name}
-                              </Text>
-                              <Text className="ingredient-total">
-                                {item.totalQuantity}
-                              </Text>
-                            </View>
-                            {item.sources.length > 1 && (
-                              <View className="ingredient-sources">
-                                {item.sources.map((src, idx) => (
-                                  <Text key={idx} className="source-item">
-                                    {src.recipeName} 需要 {src.quantity}
-                                  </Text>
-                                ))}
-                              </View>
-                            )}
-                            {item.sources.length === 1 && (
-                              <Text className="ingredient-recipe">
-                                来自 {item.sources[0].recipeName}
-                              </Text>
-                            )}
-                          </View>
+                          {isChecked && (
+                            <AtIcon value="check" size="14" color="#fff" />
+                          )}
                         </View>
-                      );
-                    })}
+                        <View className="ingredient-info">
+                          <View className="ingredient-main">
+                            <Text className="ingredient-name">{item.name}</Text>
+                            <Text className="ingredient-total">
+                              {item.totalQuantity}
+                            </Text>
+                          </View>
+                          {item.sources.length > 1 && (
+                            <View className="ingredient-sources">
+                              {item.sources.map((src, idx) => (
+                                <Text key={idx} className="source-item">
+                                  {src.recipeName} 需要 {src.quantity}
+                                </Text>
+                              ))}
+                            </View>
+                          )}
+                          {item.sources.length === 1 && (
+                            <Text className="ingredient-recipe">
+                              来自 {item.sources[0].recipeName}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
                 </View>
               )}
             </View>
