@@ -754,8 +754,59 @@
       user-select: none;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-      &:active:not(.loading) {
+      &:active:not(.loading):not(.disabled):not(.error) {
         transform: scale(0.98);
+      }
+
+      // 错误状态
+      &.error {
+        .btn-glow {
+          background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+          box-shadow:
+            0 6rpx 20rpx rgba(255, 107, 107, 0.4),
+            0 12rpx 40rpx rgba(255, 71, 87, 0.3);
+        }
+
+        .btn-content {
+          background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+        }
+
+        .btn-sub-text {
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 20rpx;
+        }
+
+        .particle {
+          opacity: 0.5;
+        }
+      }
+
+      // 置灰状态
+      &.disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+
+        .btn-glow {
+          background: linear-gradient(135deg, #ccc 0%, #bbb 100%);
+          box-shadow: none;
+        }
+
+        .btn-content {
+          background: linear-gradient(135deg, #ccc 0%, #bbb 100%);
+        }
+
+        .btn-main-text,
+        .btn-sub-text {
+          color: #999;
+        }
+
+        .btn-icon {
+          opacity: 0.5;
+        }
+
+        .particle {
+          opacity: 0.3;
+        }
       }
 
       // 背景光晕

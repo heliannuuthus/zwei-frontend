@@ -87,7 +87,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             />
           ) : (
             <View className="card-placeholder">
-              <Text className="placeholder-icon">🥚🍳</Text>
+              <Text className="placeholder-icon">🍳</Text>
             </View>
           )}
           {/* 分类标签 - 始终显示 */}

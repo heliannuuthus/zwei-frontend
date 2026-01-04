@@ -44,9 +44,7 @@ interface MenuItem {
 
 const Profile = () => {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSilentLoggingIn, setIsSilentLoggingIn] = useState(false);
-  const [showLoginButton, setShowLoginButton] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [stats, setStats] = useState({
     favorites: 0,
@@ -73,28 +71,25 @@ const Profile = () => {
       if (profile) {
         setLoggedIn(true);
         setUserInfo(profile);
-        setShowLoginButton(false);
         return;
       }
       // token 验证失败，清除无效 token
       logout();
     }
 
-    // 没有 token 或验证失败，尝试静默登录
-    setIsSilentLoggingIn(true);
+    // 没有 token 或验证失败，后台尝试静默登录
+    setIsLoggingIn(true);
     try {
       await wxLogin();
       const profile = await fetchProfile();
       if (profile) {
         setLoggedIn(true);
         setUserInfo(profile);
-        setShowLoginButton(false);
       } else {
         throw new Error('获取用户信息失败');
       }
     } catch (err) {
       console.error('静默登录失败:', err);
-      setShowLoginButton(true);
       // 异步提示认证失败
       setTimeout(() => {
         Taro.showToast({
@@ -104,7 +99,7 @@ const Profile = () => {
         });
       }, 300);
     } finally {
-      setIsSilentLoggingIn(false);
+      setIsLoggingIn(false);
     }
   }, []);
 
@@ -121,10 +116,9 @@ const Profile = () => {
 
   // 处理登录（用户手动点击登录按钮）
   const handleLogin = useCallback(async () => {
-    if (isLoading || isSilentLoggingIn) return;
+    if (isLoggingIn) return;
 
-    setIsLoading(true);
-    setShowLoginButton(false);
+    setIsLoggingIn(true);
     try {
       await wxLogin();
       const profile = await fetchProfile();
@@ -137,15 +131,14 @@ const Profile = () => {
       }
     } catch (err) {
       console.error('登录失败:', err);
-      setShowLoginButton(true);
       Taro.showToast({
         title: err instanceof Error ? err.message : '登录失败',
         icon: 'none',
       });
     } finally {
-      setIsLoading(false);
+      setIsLoggingIn(false);
     }
-  }, [isLoading, isSilentLoggingIn]);
+  }, [isLoggingIn]);
 
   // 处理退出登录
   const handleLogout = useCallback(() => {
@@ -298,28 +291,18 @@ const Profile = () => {
             </View>
           ) : (
             <View className="user-login-row">
-              <View
-                className="user-avatar-placeholder"
-                onClick={showLoginButton ? handleLogin : undefined}
-              >
-                {isSilentLoggingIn || isLoading ? (
+              <View className="user-avatar-placeholder" onClick={handleLogin}>
+                {isLoggingIn ? (
                   <Text className="loading-text">...</Text>
                 ) : (
                   <AtIcon value="user" size="36" color="#ccc" />
                 )}
               </View>
               <View className="login-info">
-                {showLoginButton && (
-                  <>
-                    <Button className="login-btn" onClick={handleLogin}>
-                      {isLoading ? '登录中...' : '微信快捷登录'}
-                    </Button>
-                    <Text className="user-slogan">点击登录，开启美食之旅</Text>
-                  </>
-                )}
-                {!showLoginButton && isSilentLoggingIn && (
-                  <Text className="user-slogan">正在登录中...</Text>
-                )}
+                <Button className="login-btn" onClick={handleLogin}>
+                  {isLoggingIn ? '登录中...' : '微信快捷登录'}
+                </Button>
+                <Text className="user-slogan">点击登录，开启美食之旅</Text>
               </View>
             </View>
           )}

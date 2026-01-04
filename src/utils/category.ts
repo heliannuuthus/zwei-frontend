@@ -51,7 +51,32 @@ export function getCategoriesFromCache(): Category[] {
  * @returns 中文名称 (如 "肉类")
  */
 export function getCategoryLabel(categoryKey: string): string {
+  if (!categoryKey) {
+    return '';
+  }
+
+  // 从缓存获取
   const categories = getCategoriesFromCache();
   const cat = categories.find(c => c.key === categoryKey);
-  return cat?.label || categoryKey;
+  if (cat?.label) {
+    return cat.label;
+  }
+
+  // 缓存中没有，返回原始 key（前端应该主动获取分类数据）
+  return categoryKey;
+}
+
+/**
+ * 初始化分类数据（应用启动时调用）
+ * 主动从服务器获取分类数据并缓存
+ */
+export async function initCategories(): Promise<void> {
+  try {
+    const { getCategories } = await import('../services/recipe');
+    const categories = await getCategories();
+    Taro.setStorageSync(CATEGORIES_CACHE_KEY, JSON.stringify(categories));
+  } catch (error) {
+    console.error('初始化分类数据失败:', error);
+    // 静默失败，不影响应用启动
+  }
 }
