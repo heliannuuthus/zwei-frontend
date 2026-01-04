@@ -8,7 +8,6 @@ import {
   logout,
   isLoggedIn,
   fetchProfile,
-  getUserInfo,
   updateProfile,
   UserInfo,
 } from '../../services/user';
@@ -46,6 +45,8 @@ interface MenuItem {
 const Profile = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSilentLoggingIn, setIsSilentLoggingIn] = useState(false);
+  const [showLoginButton, setShowLoginButton] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [stats, setStats] = useState({
     favorites: 0,
@@ -64,31 +65,53 @@ const Profile = () => {
     });
   }, []);
 
-  // 检查登录状态并加载用户信息
-  const checkLoginStatus = useCallback(async () => {
-    const logged = isLoggedIn();
-    setLoggedIn(logged);
-
-    if (logged) {
-      // 先尝试从缓存读取
-      const cached = getUserInfo();
-      if (cached) {
-        setUserInfo(cached);
-      }
-      // 请求最新 profile（会自动处理 token 刷新）
+  // 自动静默登录
+  const autoSilentLogin = useCallback(async () => {
+    // 如果已经有 token，先验证
+    if (isLoggedIn()) {
       const profile = await fetchProfile();
       if (profile) {
+        setLoggedIn(true);
         setUserInfo(profile);
+        setShowLoginButton(false);
+        return;
       }
-    } else {
-      setUserInfo(null);
+      // token 验证失败，清除无效 token
+      logout();
+    }
+
+    // 没有 token 或验证失败，尝试静默登录
+    setIsSilentLoggingIn(true);
+    try {
+      await wxLogin();
+      const profile = await fetchProfile();
+      if (profile) {
+        setLoggedIn(true);
+        setUserInfo(profile);
+        setShowLoginButton(false);
+      } else {
+        throw new Error('获取用户信息失败');
+      }
+    } catch (err) {
+      console.error('静默登录失败:', err);
+      setShowLoginButton(true);
+      // 异步提示认证失败
+      setTimeout(() => {
+        Taro.showToast({
+          title: '认证失败',
+          icon: 'none',
+          duration: 2000,
+        });
+      }, 300);
+    } finally {
+      setIsSilentLoggingIn(false);
     }
   }, []);
 
   useEffect(() => {
     loadStats();
-    checkLoginStatus();
-  }, [loadStats, checkLoginStatus]);
+    autoSilentLogin();
+  }, [loadStats, autoSilentLogin]);
 
   // useDidShow 只刷新统计数据（可能在其他页面变化）
   // 用户信息在 useEffect 首次加载，修改后在对应 handler 更新
@@ -96,22 +119,25 @@ const Profile = () => {
     loadStats();
   });
 
-  // 处理登录（静默登录）
+  // 处理登录（用户手动点击登录按钮）
   const handleLogin = useCallback(async () => {
-    if (isLoading) return;
+    if (isLoading || isSilentLoggingIn) return;
 
     setIsLoading(true);
+    setShowLoginButton(false);
     try {
       await wxLogin();
-      setLoggedIn(true);
-      // 登录成功后立即获取用户信息
       const profile = await fetchProfile();
       if (profile) {
+        setLoggedIn(true);
         setUserInfo(profile);
+        Taro.showToast({ title: '登录成功', icon: 'success' });
+      } else {
+        throw new Error('获取用户信息失败');
       }
-      Taro.showToast({ title: '登录成功', icon: 'success' });
     } catch (err) {
       console.error('登录失败:', err);
+      setShowLoginButton(true);
       Taro.showToast({
         title: err instanceof Error ? err.message : '登录失败',
         icon: 'none',
@@ -119,7 +145,7 @@ const Profile = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, [isLoading, isSilentLoggingIn]);
 
   // 处理退出登录
   const handleLogout = useCallback(() => {
@@ -272,18 +298,28 @@ const Profile = () => {
             </View>
           ) : (
             <View className="user-login-row">
-              <View className="user-avatar-placeholder" onClick={handleLogin}>
-                {isLoading ? (
+              <View
+                className="user-avatar-placeholder"
+                onClick={showLoginButton ? handleLogin : undefined}
+              >
+                {isSilentLoggingIn || isLoading ? (
                   <Text className="loading-text">...</Text>
                 ) : (
                   <AtIcon value="user" size="36" color="#ccc" />
                 )}
               </View>
               <View className="login-info">
-                <Button className="login-btn" onClick={handleLogin}>
-                  {isLoading ? '登录中...' : '微信快捷登录'}
-                </Button>
-                <Text className="user-slogan">点击登录，开启美食之旅</Text>
+                {showLoginButton && (
+                  <>
+                    <Button className="login-btn" onClick={handleLogin}>
+                      {isLoading ? '登录中...' : '微信快捷登录'}
+                    </Button>
+                    <Text className="user-slogan">点击登录，开启美食之旅</Text>
+                  </>
+                )}
+                {!showLoginButton && isSilentLoggingIn && (
+                  <Text className="user-slogan">正在登录中...</Text>
+                )}
               </View>
             </View>
           )}
@@ -292,9 +328,9 @@ const Profile = () => {
           <View className="quick-actions">
             <View
               className="action-item"
-              onClick={() =>
-                Taro.navigateTo({ url: '/pages/profile/favorites' })
-              }
+              onClick={() => {
+                Taro.navigateTo({ url: '/pages/profile/favorites' });
+              }}
             >
               <View className="action-icon">
                 <Image src={starFilledIcon} className="custom-icon" />
@@ -303,9 +339,9 @@ const Profile = () => {
             </View>
             <View
               className="action-item"
-              onClick={() =>
-                Taro.showToast({ title: '功能开发中', icon: 'none' })
-              }
+              onClick={() => {
+                Taro.navigateTo({ url: '/pages/profile/history' });
+              }}
             >
               <View className="action-icon">
                 <Image src={footprintIcon} className="custom-icon" />

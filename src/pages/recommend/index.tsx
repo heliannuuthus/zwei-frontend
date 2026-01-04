@@ -82,36 +82,123 @@ const PermissionRequest = ({
   );
 };
 
-// 错误提示组件
+// 错误状态组件 - 专业 UI/UX 设计
 const ErrorState = ({
   message,
   onRetry,
+  errorType = 'general',
 }: {
   message: string;
   onRetry: () => void;
-}) => (
-  <View className="error-container">
-    <View className="error-icon">😢</View>
-    <Text className="error-title">获取信息失败</Text>
-    <Text className="error-desc">{message}</Text>
-    <AtButton type="primary" className="error-btn" onClick={onRetry}>
-      重试
-    </AtButton>
-  </View>
-);
+  errorType?: 'network' | 'auth' | 'general';
+}) => {
+  const errorConfig = {
+    network: {
+      illustration: '📡',
+      title: '网络似乎开小差了',
+      subtitle: '请检查您的网络连接',
+      color: '#3498db',
+      bgGradient: 'linear-gradient(135deg, #ebf4ff 0%, #e8f4f8 100%)',
+    },
+    auth: {
+      illustration: '🔑',
+      title: '登录状态已失效',
+      subtitle: '重新加载将自动恢复',
+      color: '#9b59b6',
+      bgGradient: 'linear-gradient(135deg, #f5f0ff 0%, #faf0ff 100%)',
+    },
+    general: {
+      illustration: '🌧️',
+      title: '出了点小问题',
+      subtitle: message || '请稍后再试',
+      color: '#e67e22',
+      bgGradient: 'linear-gradient(135deg, #fff8f0 0%, #fff5eb 100%)',
+    },
+  };
+
+  const config = errorConfig[errorType];
+
+  return (
+    <View className="error-page">
+      {/* 背景装饰 */}
+      <View className="error-bg-decoration">
+        <View className="bg-circle bg-circle-1" />
+        <View className="bg-circle bg-circle-2" />
+        <View className="bg-circle bg-circle-3" />
+      </View>
+
+      <View className="error-content">
+        {/* 插图区域 */}
+        <View className="error-illustration">
+          <View
+            className="illustration-glow"
+            style={{ background: config.color }}
+          />
+          <View className="illustration-icon">{config.illustration}</View>
+          <View className="illustration-ring" />
+          <View className="illustration-ring illustration-ring-2" />
+        </View>
+
+        {/* 文案区域 */}
+        <View className="error-text">
+          <Text className="error-title">{config.title}</Text>
+          <Text className="error-subtitle">{config.subtitle}</Text>
+        </View>
+
+        {/* 操作按钮 */}
+        <View className="error-actions">
+          <View className="retry-btn" onClick={onRetry}>
+            <View className="retry-btn-bg" />
+            <View className="retry-btn-content">
+              <Text className="retry-icon">↻</Text>
+              <Text className="retry-text">重新加载</Text>
+            </View>
+          </View>
+
+          <View
+            className="home-link"
+            onClick={() => Taro.switchTab({ url: '/pages/index/index' })}
+          >
+            <Text className="home-text">返回首页</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 底部提示 */}
+      <View className="error-footer">
+        <View className="footer-tips">
+          <View className="tip-row">
+            <Text className="tip-icon">📶</Text>
+            <Text className="tip-label">检查网络连接</Text>
+          </View>
+          <View className="tip-divider" />
+          <View className="tip-row">
+            <Text className="tip-icon">📍</Text>
+            <Text className="tip-label">开启位置权限</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
 
 const Recommend = () => {
   const [state, setState] = useState<PageState>('loading');
   const [location, setLocation] = useState<LocationInfo | null>(null);
   const [context, setContext] = useState<ContextResponse | null>(null);
   const [error, setError] = useState<string>('');
+  const [errorType, setErrorType] = useState<'network' | 'auth' | 'general'>(
+    'general'
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [locationAuthStatus, setLocationAuthStatus] =
     useState<LocationAuthStatus>('not_determined');
-  
+
   // AI 推荐相关状态
-  const [aiRecommendations, setAiRecommendations] = useState<RecommendResponse | null>(null);
+  const [aiRecommendations, setAiRecommendations] =
+    useState<RecommendResponse | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string>('');
 
   // 静默登录，确保有有效 token
   const ensureLogin = useCallback(async (): Promise<boolean> => {
@@ -153,21 +240,39 @@ const Recommend = () => {
       const result = await getContext(loc);
       setContext(result);
       setState('success');
+      setError('');
+      setErrorType('general');
     } catch (err: any) {
-      // 检查是否是登录过期，尝试重新静默登录
+      console.error('[Context] 获取失败:', err);
+
+      // 检查是否是登录过期
       if (err.message?.includes('登录') || err.message?.includes('401')) {
         try {
+          console.log('[Context] 尝试重新登录...');
           await wxLogin();
           // 重新请求
           const result = await getContext(loc);
           setContext(result);
           setState('success');
-        } catch {
-          setError('网络错误，请稍后重试');
+          setError('');
+          return;
+        } catch (retryErr: any) {
+          console.error('[Context] 重试失败:', retryErr);
+          setError('登录失败，请重试');
+          setErrorType('auth');
           setState('error');
         }
+      } else if (
+        err.message?.includes('网络') ||
+        err.message?.includes('timeout') ||
+        err.message?.includes('请求失败')
+      ) {
+        setError('网络连接失败，请检查网络后重试');
+        setErrorType('network');
+        setState('error');
       } else {
-        setError(err.message || '网络错误');
+        setError(err.message || '获取信息失败，请稍后重试');
+        setErrorType('general');
         setState('error');
       }
     }
@@ -232,22 +337,23 @@ const Recommend = () => {
 
     try {
       setAiLoading(true);
+      setAiError('');
       Taro.showLoading({ title: 'AI 生成中...', mask: true });
 
       // 确保登录（可选）
       try {
         await ensureLogin();
       } catch (err) {
-        console.log('[AI Recommend] 游客模式');
+        console.log('[AI Recommend] 游客模式，继续生成');
       }
 
       // 调用 AI 推荐 API
       const result = await getRecommendations(location, 6);
       setAiRecommendations(result);
-      
+
       Taro.hideLoading();
-      Taro.showToast({ title: '推荐成功', icon: 'success', duration: 1500 });
-      
+      Taro.showToast({ title: '✨ 推荐成功', icon: 'success', duration: 1500 });
+
       // 滚动到推荐结果
       setTimeout(() => {
         Taro.pageScrollTo({ scrollTop: 500, duration: 300 });
@@ -255,10 +361,29 @@ const Recommend = () => {
     } catch (err: any) {
       console.error('[AI Recommend] 生成失败:', err);
       Taro.hideLoading();
-      Taro.showToast({ 
-        title: err.message || '生成失败，请重试', 
+
+      // 设置详细的错误信息
+      let errorMessage = '生成失败，请重试';
+      if (
+        err.message?.includes('401') ||
+        err.message?.includes('Unauthorized')
+      ) {
+        errorMessage = 'API 认证失败，请联系管理员';
+      } else if (
+        err.message?.includes('网络') ||
+        err.message?.includes('timeout')
+      ) {
+        errorMessage = '网络连接失败，请检查网络';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setAiError(errorMessage);
+
+      Taro.showToast({
+        title: errorMessage,
         icon: 'none',
-        duration: 2000
+        duration: 3000,
       });
     } finally {
       setAiLoading(false);
@@ -285,7 +410,7 @@ const Recommend = () => {
   }
 
   if (state === 'error') {
-    return <ErrorState message={error} onRetry={init} />;
+    return <ErrorState message={error} onRetry={init} errorType={errorType} />;
   }
 
   return (
@@ -391,14 +516,33 @@ const Recommend = () => {
               <View className="feature-tag">⚡ 即时生成</View>
             </View>
 
+            {/* 错误提示 - 优雅样式 */}
+            {aiError && (
+              <View className="ai-error-card">
+                <View className="error-card-icon">
+                  <Text className="icon-emoji">😔</Text>
+                </View>
+                <View className="error-card-content">
+                  <Text className="error-card-title">推荐生成失败</Text>
+                  <Text className="error-card-desc">{aiError}</Text>
+                </View>
+                <View
+                  className="error-card-action"
+                  onClick={generateAiRecommendations}
+                >
+                  <Text className="action-text">重试</Text>
+                </View>
+              </View>
+            )}
+
             {/* 智能生成按钮 */}
-            <View 
+            <View
               className={`smart-generate-btn ${aiLoading ? 'loading' : ''}`}
-              onClick={generateAiRecommendations}
+              onClick={aiLoading ? undefined : generateAiRecommendations}
             >
               {/* 背景光晕效果 */}
               <View className="btn-glow" />
-              
+
               {/* 按钮内容 */}
               <View className="btn-content">
                 {aiLoading ? (
@@ -446,12 +590,8 @@ const Recommend = () => {
 
             {/* 推荐菜谱列表 */}
             <View className="recipes-grid">
-              {aiRecommendations.recipes.map((recipe) => (
-                <RecipeCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  layout="grid"
-                />
+              {aiRecommendations.recipes.map(recipe => (
+                <RecipeCard key={recipe.id} recipe={recipe} layout="grid" />
               ))}
             </View>
           </View>

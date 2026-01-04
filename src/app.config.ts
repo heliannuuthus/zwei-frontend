@@ -9,6 +9,7 @@ export default defineAppConfig({
     'pages/takeout/index',
     'pages/profile/index',
     'pages/profile/favorites',
+    'pages/profile/history',
     'pages/profile/help',
   ],
   window: {

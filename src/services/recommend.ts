@@ -291,16 +291,12 @@ export async function getRecommendations(
   location: LocationInfo,
   limit: number = 6
 ): Promise<RecommendResponse> {
-  return request<RecommendResponse>(
-    `/api/recommend?limit=${limit}`,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        latitude: location.latitude,
-        longitude: location.longitude,
-        timestamp: Date.now(),
-      }),
-    },
-    { requireAuth: false } // 可选登录
-  );
+  return request<RecommendResponse>(`/api/recommend?limit=${limit}`, {
+    method: 'POST',
+    body: JSON.stringify({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      timestamp: Date.now(),
+    }),
+  });
 }

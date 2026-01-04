@@ -1,19 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  Swiper,
-  SwiperItem,
-} from '@tarojs/components';
-import { AtIcon, AtRate } from 'taro-ui';
+import { View, Text, Image, Swiper, SwiperItem } from '@tarojs/components';
+import { AtIcon } from 'taro-ui';
 import Taro from '@tarojs/taro';
-import {
-  getBanners,
-  getHotRecipes,
-  BannerItem,
-} from '../../services/home';
+import { getBanners, getHotRecipes, BannerItem } from '../../services/home';
 import { RecipeListItem } from '../../services/recipe';
 import RecipeCard from '../../components/RecipeCard/index';
 import './index.scss';
@@ -194,11 +183,7 @@ const Index = () => {
           </View>
           <View className="recipe-grid">
             {hotRecipes.map(recipe => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                layout="grid"
-              />
+              <RecipeCard key={recipe.id} recipe={recipe} layout="grid" />
             ))}
           </View>
         </View>

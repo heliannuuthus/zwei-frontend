@@ -17,7 +17,6 @@ import {
   Category,
 } from '../../services/recipe';
 import { getCategoryColor } from '../../utils/category';
-import RecipeCard from '../../components/RecipeCard/index';
 import checklistIcon from '../../assets/icons/checklist.svg';
 import './index.scss';
 
