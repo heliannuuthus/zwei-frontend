@@ -286,6 +286,7 @@ export interface RecommendResponse {
 
 /**
  * 获取 LLM 推荐（支持可选登录）
+ * 超时时间：30秒（30000ms）
  */
 export async function getRecommendations(
   location: LocationInfo,
@@ -298,5 +299,6 @@ export async function getRecommendations(
       longitude: location.longitude,
       timestamp: Date.now(),
     }),
+    timeout: 30000, // 30秒超时
   });
 }

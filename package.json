@@ -44,6 +44,7 @@
     "@babel/core": "^7.8.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@tarojs/cli": "4.1.8",
+    "@tarojs/plugin-mini-ci": "^4.1.9",
     "@tarojs/webpack5-runner": "4.1.8",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
