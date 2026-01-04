@@ -85,8 +85,14 @@ async function handleTokenRefresh(): Promise<boolean> {
 }
 
 // 请求封装
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  url: string,
+  options: RequestInit & { timeout?: number } = {}
+): Promise<T> {
   const fullUrl = `${apiConfig.baseURL}${url}`;
+
+  // 使用自定义超时时间，如果没有则使用默认值
+  const timeout = options.timeout ?? apiConfig.timeout;
 
   // 重试逻辑
   for (let attempt = 1; attempt <= apiConfig.retries; attempt++) {
@@ -101,14 +107,16 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      console.log(`[API] ${attempt}/${apiConfig.retries} 请求: ${fullUrl}`);
+      console.log(
+        `[API] ${attempt}/${apiConfig.retries} 请求: ${fullUrl}, 超时: ${timeout}ms`
+      );
 
       const response = await Taro.request({
         url: fullUrl,
         method: (options.method as any) || 'GET',
         header: headers,
         data: options.body ? JSON.parse(options.body as string) : undefined,
-        timeout: apiConfig.timeout,
+        timeout: timeout,
       });
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
