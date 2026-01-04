@@ -199,6 +199,7 @@ const Recommend = () => {
     useState<RecommendResponse | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string>('');
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
 
   // 静默登录，确保有有效 token
   const ensureLogin = useCallback(async (): Promise<boolean> => {
@@ -328,6 +329,33 @@ const Recommend = () => {
     await refresh();
   }, [refresh]);
 
+  // 处理登录
+  const handleLogin = useCallback(async (): Promise<boolean> => {
+    try {
+      Taro.showLoading({ title: '登录中...', mask: true });
+      await wxLogin();
+      const loggedIn = isLoggedIn();
+      setIsUserLoggedIn(loggedIn);
+      Taro.hideLoading();
+      if (loggedIn) {
+        Taro.showToast({ title: '登录成功', icon: 'success' });
+        return true;
+      } else {
+        Taro.showToast({ title: '登录失败', icon: 'none' });
+        return false;
+      }
+    } catch (err: any) {
+      Taro.hideLoading();
+      console.error('[Recommend] 登录失败:', err);
+      Taro.showToast({
+        title: err.message || '登录失败，请重试',
+        icon: 'none',
+        duration: 2000,
+      });
+      return false;
+    }
+  }, []);
+
   // 生成 AI 推荐
   const generateAiRecommendations = useCallback(async () => {
     if (!location) {
@@ -335,16 +363,24 @@ const Recommend = () => {
       return;
     }
 
+    // 检查登录状态
+    if (!isUserLoggedIn) {
+      const loginSuccess = await handleLogin();
+      if (!loginSuccess) {
+        return;
+      }
+    }
+
     try {
       setAiLoading(true);
       setAiError('');
       Taro.showLoading({ title: 'AI 生成中...', mask: true });
 
-      // 确保登录（可选）
+      // 确保登录
       try {
         await ensureLogin();
       } catch (err) {
-        console.log('[AI Recommend] 游客模式，继续生成');
+        console.log('[AI Recommend] 登录验证失败，继续生成');
       }
 
       // 调用 AI 推荐 API
@@ -388,11 +424,23 @@ const Recommend = () => {
     } finally {
       setAiLoading(false);
     }
-  }, [location, ensureLogin]);
+  }, [location, isUserLoggedIn, handleLogin, ensureLogin]);
+
+  // 检查登录状态
+  const checkLoginStatus = useCallback(() => {
+    const loggedIn = isLoggedIn();
+    setIsUserLoggedIn(loggedIn);
+  }, []);
 
   useEffect(() => {
     init();
-  }, [init]);
+    checkLoginStatus();
+  }, [init, checkLoginStatus]);
+
+  // 页面显示时检查登录状态
+  Taro.useDidShow(() => {
+    checkLoginStatus();
+  });
 
   // 获取星期几的中文
   const getDayOfWeekName = (day: number) => {
@@ -516,28 +564,9 @@ const Recommend = () => {
               <View className="feature-tag">⚡ 即时生成</View>
             </View>
 
-            {/* 错误提示 - 优雅样式 */}
-            {aiError && (
-              <View className="ai-error-card">
-                <View className="error-card-icon">
-                  <Text className="icon-emoji">🍳</Text>
-                </View>
-                <View className="error-card-content">
-                  <Text className="error-card-title">推荐生成失败</Text>
-                  <Text className="error-card-desc">{aiError}</Text>
-                </View>
-                <View
-                  className="error-card-action"
-                  onClick={generateAiRecommendations}
-                >
-                  <Text className="action-text">重试</Text>
-                </View>
-              </View>
-            )}
-
             {/* 智能生成按钮 */}
             <View
-              className={`smart-generate-btn ${aiLoading ? 'loading' : ''}`}
+              className={`smart-generate-btn ${aiLoading ? 'loading' : ''} ${!isUserLoggedIn ? 'disabled' : ''} ${aiError ? 'error' : ''}`}
               onClick={aiLoading ? undefined : generateAiRecommendations}
             >
               {/* 背景光晕效果 */}
@@ -557,6 +586,17 @@ const Recommend = () => {
                       <Text className="btn-sub-text">为您精选美味...</Text>
                     </View>
                   </>
+                ) : aiError ? (
+                  <>
+                    <View className="btn-icon-wrapper">
+                      <Text className="btn-icon">⚠️</Text>
+                    </View>
+                    <View className="btn-text-group">
+                      <Text className="btn-main-text">生成失败</Text>
+                      <Text className="btn-sub-text">{aiError}</Text>
+                    </View>
+                    <Text className="btn-arrow">↻</Text>
+                  </>
                 ) : (
                   <>
                     <View className="btn-icon-wrapper">
@@ -564,8 +604,14 @@ const Recommend = () => {
                       <View className="icon-pulse" />
                     </View>
                     <View className="btn-text-group">
-                      <Text className="btn-main-text">生成专属推荐</Text>
-                      <Text className="btn-sub-text">点击开启美食之旅</Text>
+                      <Text className="btn-main-text">
+                        {isUserLoggedIn ? '生成专属推荐' : '登录后生成专属推荐'}
+                      </Text>
+                      <Text className="btn-sub-text">
+                        {isUserLoggedIn
+                          ? '点击开启美食之旅'
+                          : '登录后享受个性化推荐'}
+                      </Text>
                     </View>
                     <Text className="btn-arrow">→</Text>
                   </>
