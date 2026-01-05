@@ -40,15 +40,22 @@ jobs:
       - name: Get version info
         id: version
         run: |
+          # 格式：YYYYMMDD-HHMMSS-COMMIT_HASH
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          AUTO_VERSION="${TIMESTAMP}-${COMMIT_SHA}"
+          
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
             echo "is_release=true" >> $GITHUB_OUTPUT
           else
-            VERSION=$(git rev-parse --short HEAD)
+            VERSION="${AUTO_VERSION}"
             echo "is_release=false" >> $GITHUB_OUTPUT
           fi
+          
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "desc=CI 自动构建 ${VERSION} @ $(date +%Y-%m-%d\ %H:%M)" >> $GITHUB_OUTPUT
+          echo "desc=CI 自动构建 ${VERSION}" >> $GITHUB_OUTPUT
+          echo "Generated version: ${VERSION}"
 
       - name: Update taroConfig version
         run: |
