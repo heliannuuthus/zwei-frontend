@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView } from '@tarojs/components';
-import { AtButton } from 'taro-ui';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, Image } from '@tarojs/components';
+import { AtButton, AtMessage } from 'taro-ui';
 import Taro from '@tarojs/taro';
 import {
   getFuzzyLocation,
   getContext,
-  getRecommendations,
   getMealTimeName,
   getSeasonName,
   getWeatherTheme,
@@ -15,8 +14,14 @@ import {
   LocationInfo,
   LocationAuthStatus,
 } from '../../services/recommend';
+import {
+  fetchAiRecommendations,
+  getCacheState,
+  getCachedResult,
+  subscribeEvents,
+  clearCache,
+} from '../../services/aiRecommendCache';
 import { wxLogin, isLoggedIn, ensureValidToken } from '../../services/user';
-import RecipeCard from '../../components/RecipeCard/index';
 import './index.scss';
 
 // 页面状态
@@ -200,6 +205,10 @@ const Recommend = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string>('');
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  // 保留的菜品 ID（换一批时不替换这些）
+  const [keepRecipeIds, setKeepRecipeIds] = useState<Set<string>>(new Set());
+  // 新加入的菜品 ID（用于控制动画，只有新菜品播放入场动画）
+  const [newRecipeIds, setNewRecipeIds] = useState<Set<string>>(new Set());
 
   // 静默登录，确保有有效 token
   const ensureLogin = useCallback(async (): Promise<boolean> => {
@@ -357,74 +366,106 @@ const Recommend = () => {
   }, []);
 
   // 生成 AI 推荐
-  const generateAiRecommendations = useCallback(async () => {
-    if (!location) {
-      Taro.showToast({ title: '请先获取位置信息', icon: 'none' });
-      return;
-    }
-
-    // 检查登录状态
-    if (!isUserLoggedIn) {
-      const loginSuccess = await handleLogin();
-      if (!loginSuccess) {
+  // isRefresh: 是否为换一批操作（保留用户选中的菜品）
+  const generateAiRecommendations = useCallback(
+    async (isRefresh: boolean = false) => {
+      if (!location) {
+        Taro.showToast({ title: '请先获取位置信息', icon: 'none' });
         return;
       }
-    }
 
-    try {
-      setAiLoading(true);
-      setAiError('');
-      Taro.showLoading({ title: 'AI 生成中...', mask: true });
+      // 检查登录状态
+      if (!isUserLoggedIn) {
+        const loginSuccess = await handleLogin();
+        if (!loginSuccess) {
+          return;
+        }
+      }
 
-      // 确保登录
       try {
-        await ensureLogin();
-      } catch (err) {
-        console.log('[AI Recommend] 登录验证失败，继续生成');
+        setAiLoading(true);
+        setAiError('');
+
+        // 确保登录
+        try {
+          await ensureLogin();
+        } catch (err) {
+          console.log('[AI Recommend] 登录验证失败，继续生成');
+        }
+
+        // 计算需要排除和保留的菜品
+        let excludeIds: string[] | undefined;
+        let keepRecipes: RecommendResponse['recipes'] = [];
+        const targetCount = 6;
+
+        if (isRefresh && aiRecommendations) {
+          // 换一批：保留用户选中的菜品，排除当前所有菜品
+          excludeIds = aiRecommendations.recipes.map(r => r.id);
+          keepRecipes = aiRecommendations.recipes.filter(r =>
+            keepRecipeIds.has(r.id)
+          );
+        }
+
+        // 计算需要请求的数量
+        const needCount = targetCount - keepRecipes.length;
+
+        if (needCount <= 0) {
+          // 全部保留，无需请求
+          setAiLoading(false);
+          Taro.showToast({ title: '您已保留所有菜品', icon: 'none' });
+          return;
+        }
+
+        // 调用 AI 推荐 API
+        const result = await fetchAiRecommendations(
+          location,
+          needCount,
+          excludeIds
+        );
+        clearCache();
+
+        // 记录新加入的菜品 ID（用于控制动画）
+        const newIds = new Set(result.recipes.map(r => r.id));
+        setNewRecipeIds(newIds);
+
+        // 合并保留的菜品和新推荐的菜品
+        const mergedRecipes = [...keepRecipes, ...result.recipes];
+        setAiRecommendations({
+          recipes: mergedRecipes,
+          summary: result.summary,
+          remaining: result.remaining,
+        });
+
+        setAiLoading(false);
+        Taro.atMessage({ message: '✨ 推荐生成成功', type: 'success' });
+        // 只有首次生成时滚动到结果区域
+        if (!isRefresh) {
+          setTimeout(() => {
+            Taro.pageScrollTo({ scrollTop: 500, duration: 300 });
+          }, 100);
+        }
+      } catch (err: any) {
+        console.error('[AI Recommend] 生成失败:', err);
+        setAiLoading(false);
+
+        let errorMessage = '生成失败，请重试';
+        if (err.message) {
+          errorMessage = err.message;
+        }
+
+        setAiError(errorMessage);
+        Taro.atMessage({ message: errorMessage, type: 'error' });
       }
-
-      // 调用 AI 推荐 API
-      const result = await getRecommendations(location, 6);
-      setAiRecommendations(result);
-
-      Taro.hideLoading();
-      Taro.showToast({ title: '✨ 推荐成功', icon: 'success', duration: 1500 });
-
-      // 滚动到推荐结果
-      setTimeout(() => {
-        Taro.pageScrollTo({ scrollTop: 500, duration: 300 });
-      }, 100);
-    } catch (err: any) {
-      console.error('[AI Recommend] 生成失败:', err);
-      Taro.hideLoading();
-
-      // 设置详细的错误信息
-      let errorMessage = '生成失败，请重试';
-      if (
-        err.message?.includes('401') ||
-        err.message?.includes('Unauthorized')
-      ) {
-        errorMessage = 'API 认证失败，请联系管理员';
-      } else if (
-        err.message?.includes('网络') ||
-        err.message?.includes('timeout')
-      ) {
-        errorMessage = '网络连接失败，请检查网络';
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      setAiError(errorMessage);
-
-      Taro.showToast({
-        title: errorMessage,
-        icon: 'none',
-        duration: 3000,
-      });
-    } finally {
-      setAiLoading(false);
-    }
-  }, [location, isUserLoggedIn, handleLogin, ensureLogin]);
+    },
+    [
+      location,
+      isUserLoggedIn,
+      handleLogin,
+      ensureLogin,
+      aiRecommendations,
+      keepRecipeIds,
+    ]
+  );
 
   // 检查登录状态
   const checkLoginStatus = useCallback(() => {
@@ -432,14 +473,64 @@ const Recommend = () => {
     setIsUserLoggedIn(loggedIn);
   }, []);
 
+  // 保存 location 的 ref，供 useDidShow 使用
+  const locationRef = React.useRef(location);
+  locationRef.current = location;
+
+  // 恢复缓存状态
+  const restoreCacheState = useCallback(() => {
+    const loc = locationRef.current;
+    if (!loc) return;
+
+    // 检查是否有缓存结果
+    const cached = getCachedResult(loc);
+    if (cached) {
+      setAiRecommendations(cached);
+      setAiLoading(false);
+      setAiError('');
+      return;
+    }
+
+    // 检查是否有进行中的请求
+    const state = getCacheState();
+    if (state.loading) {
+      setAiLoading(true);
+      setAiError('');
+    } else if (state.error) {
+      setAiError(state.error);
+      setAiLoading(false);
+    } else if (state.result) {
+      setAiRecommendations(state.result);
+      setAiLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     init();
     checkLoginStatus();
   }, [init, checkLoginStatus]);
 
-  // 页面显示时检查登录状态
+  // 订阅 AI 推荐事件（处理后台请求完成的情况）
+  useEffect(() => {
+    const unsubscribe = subscribeEvents({
+      onSuccess: result => {
+        setAiRecommendations(result);
+        setAiLoading(false);
+        setAiError('');
+      },
+      onError: error => {
+        setAiError(error);
+        setAiLoading(false);
+      },
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // 页面显示时检查登录状态和恢复缓存
   Taro.useDidShow(() => {
     checkLoginStatus();
+    restoreCacheState();
   });
 
   // 获取星期几的中文
@@ -462,191 +553,323 @@ const Recommend = () => {
   }
 
   return (
-    <ScrollView
-      className="recommend-container"
-      scrollY
-      enhanced
-      showScrollbar={false}
-      refresherEnabled
-      refresherTriggered={refreshing}
-      onRefresherRefresh={onRefresh}
-      refresherBackground="#FFF9F5"
-    >
-      {/* 天气卡片 */}
-      {context && (
-        <View className="weather-card">
-          {/* 顶部：位置 + 时间 */}
-          <View className="card-header">
-            <Text className="location">
-              🍳 {context.location?.city || '未知位置'}
-              {context.location?.district && ` · ${context.location.district}`}
-            </Text>
-            {context.time && (
-              <Text className="datetime">
-                {getDayOfWeekName(context.time.day_of_week)}{' '}
-                {String(context.time.hour).padStart(2, '0')}:
-                {String(new Date().getMinutes()).padStart(2, '0')}
+    <View className="recommend-page">
+      <AtMessage />
+      <ScrollView
+        className="recommend-container"
+        scrollY
+        enhanced
+        showScrollbar={false}
+        refresherEnabled
+        refresherTriggered={refreshing}
+        onRefresherRefresh={onRefresh}
+        refresherBackground="#FFF9F5"
+      >
+        {/* 天气卡片 */}
+        {context && (
+          <View className="weather-card">
+            {/* 顶部：位置 + 时间 */}
+            <View className="card-header">
+              <Text className="location">
+                🍳 {context.location?.city || '未知位置'}
+                {context.location?.district &&
+                  ` · ${context.location.district}`}
               </Text>
-            )}
-          </View>
+              {context.time && (
+                <Text className="datetime">
+                  {getDayOfWeekName(context.time.day_of_week)}{' '}
+                  {String(context.time.hour).padStart(2, '0')}:
+                  {String(new Date().getMinutes()).padStart(2, '0')}
+                </Text>
+              )}
+            </View>
 
-          {/* 核心：天气图标 + 温度湿度 */}
-          <View className="weather-main">
-            <Text className="weather-icon">
-              {getWeatherTheme(context.weather?.weather || '').icon}
-            </Text>
-            <View className="data-row">
-              <View className="data-item">
-                <View className="data-value-row">
-                  <Text className="data-value">
-                    {context.weather?.temperature || '--'}
-                  </Text>
-                  <Text className="data-unit">°C</Text>
-                </View>
-                <Text className="data-label">温度</Text>
-              </View>
-              {context.weather?.humidity && (
+            {/* 核心：天气图标 + 温度湿度 */}
+            <View className="weather-main">
+              <Text className="weather-icon">
+                {getWeatherTheme(context.weather?.weather || '').icon}
+              </Text>
+              <View className="data-row">
                 <View className="data-item">
                   <View className="data-value-row">
                     <Text className="data-value">
-                      {context.weather.humidity}
+                      {context.weather?.temperature || '--'}
                     </Text>
-                    <Text className="data-unit">%</Text>
+                    <Text className="data-unit">°C</Text>
                   </View>
-                  <Text className="data-label">湿度</Text>
+                  <Text className="data-label">温度</Text>
                 </View>
-              )}
+                {context.weather?.humidity && (
+                  <View className="data-item">
+                    <View className="data-value-row">
+                      <Text className="data-value">
+                        {context.weather.humidity}
+                      </Text>
+                      <Text className="data-unit">%</Text>
+                    </View>
+                    <Text className="data-label">湿度</Text>
+                  </View>
+                )}
+              </View>
+              <Text className="weather-desc">
+                {context.weather?.weather || '未知'}
+              </Text>
             </View>
-            <Text className="weather-desc">
-              {context.weather?.weather || '未知'}
+
+            {/* 底部：用餐 + 时节 */}
+            {context.time && (
+              <View className="card-footer">
+                <View className="info-item">
+                  <Text className="info-label">用餐</Text>
+                  <Text className="info-value">
+                    {getMealTimeName(context.time.meal_time)}
+                  </Text>
+                </View>
+                <View className="info-item">
+                  <Text className="info-label">时节</Text>
+                  <Text className="info-value">
+                    {getSeasonName(context.time.season)}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* AI 智能推荐功能 */}
+        <View className="ai-recommend-section">
+          <View className="section-header">
+            <View className="header-badge">
+              <Text className="badge-icon">✨</Text>
+              <Text className="badge-text">AI 推荐</Text>
+            </View>
+            <Text className="section-title">智能美食推荐</Text>
+            <Text className="section-desc">
+              基于您的口味偏好 · 当前天气 · 用餐时段
             </Text>
           </View>
 
-          {/* 底部：用餐 + 时节 */}
-          {context.time && (
-            <View className="card-footer">
-              <View className="info-item">
-                <Text className="info-label">用餐</Text>
-                <Text className="info-value">
-                  {getMealTimeName(context.time.meal_time)}
-                </Text>
+          {!aiRecommendations ? (
+            <View className="generate-container">
+              {/* 智能生成按钮 */}
+              <View
+                className={`smart-generate-btn ${aiLoading ? 'loading' : ''} ${!isUserLoggedIn ? 'disabled' : ''}`}
+                onClick={
+                  aiLoading ? undefined : () => generateAiRecommendations()
+                }
+              >
+                {/* 按钮内容 */}
+                <View className="btn-content">
+                  {aiLoading ? (
+                    <>
+                      <View className="loading-spinner">
+                        <View className="spinner-ring" />
+                      </View>
+                      <Text className="btn-main-text">AI 正在思考...</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text className="btn-icon">✨</Text>
+                      <View className="btn-text-group">
+                        <Text className="btn-main-text">
+                          {isUserLoggedIn
+                            ? '生成专属推荐'
+                            : '登录后生成专属推荐'}
+                        </Text>
+                        <Text className="btn-sub-text">每日可用 10 次</Text>
+                      </View>
+                    </>
+                  )}
+                </View>
               </View>
-              <View className="info-item">
-                <Text className="info-label">时节</Text>
-                <Text className="info-value">
-                  {getSeasonName(context.time.season)}
-                </Text>
-              </View>
+
+              {/* 错误提示卡片 */}
+              {aiError && (
+                <View className="error-tip-card">
+                  <View className="error-tip-content">
+                    <Text className="error-tip-icon">⚠️</Text>
+                    <View className="error-tip-text">
+                      <Text className="error-tip-title">生成失败</Text>
+                      <Text className="error-tip-message">{aiError}</Text>
+                    </View>
+                  </View>
+                  <View
+                    className="error-tip-close"
+                    onClick={() => setAiError('')}
+                  >
+                    <Text>✕</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View className="ai-results">
+              {/* 推荐菜谱列表 */}
+              {aiRecommendations && (
+                <>
+                  {aiRecommendations.recipes.length > 0 ? (
+                    <>
+                      <View className="ai-results-header">
+                        <View className="header-left">
+                          <Text className="results-summary">
+                            {aiRecommendations.summary ||
+                              `为您精选 ${aiRecommendations.recipes.length} 道美食`}
+                          </Text>
+                          <Text className="remaining-count">
+                            今日剩余 {aiRecommendations.remaining} 次
+                          </Text>
+                        </View>
+                        <View
+                          className={`refresh-btn ${aiLoading ? 'loading' : ''} ${aiRecommendations.remaining <= 0 ? 'disabled' : ''}`}
+                          onClick={() => {
+                            if (aiLoading) return;
+                            if (aiRecommendations.remaining <= 0) {
+                              Taro.showToast({
+                                title: '今日次数已用完',
+                                icon: 'none',
+                              });
+                              return;
+                            }
+                            generateAiRecommendations(true);
+                          }}
+                        >
+                          {aiLoading ? (
+                            <>
+                              <View className="refresh-spinner" />
+                              <Text className="refresh-text">生成中...</Text>
+                            </>
+                          ) : (
+                            <>
+                              <Text className="refresh-icon">↻</Text>
+                              <Text className="refresh-text">换一批</Text>
+                            </>
+                          )}
+                        </View>
+                      </View>
+                      <View className="recipes-list">
+                        {aiRecommendations.recipes.map((recipe, index) => {
+                          const isKept = keepRecipeIds.has(recipe.id);
+                          const isNew = newRecipeIds.has(recipe.id);
+                          return (
+                            <View
+                              key={recipe.id}
+                              className={`recipe-card-wrapper ${isKept ? 'kept' : ''} ${isNew ? 'animate-in' : ''}`}
+                              style={
+                                isNew
+                                  ? { animationDelay: `${index * 0.1}s` }
+                                  : undefined
+                              }
+                            >
+                              {/* 保留按钮 */}
+                              <View
+                                className={`keep-btn ${isKept ? 'active' : ''}`}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setKeepRecipeIds(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(recipe.id)) {
+                                      next.delete(recipe.id);
+                                    } else {
+                                      next.add(recipe.id);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <Text className="keep-icon">
+                                  {isKept ? '🔖' : '🏷️'}
+                                </Text>
+                              </View>
+                              {/* 菜品封面 */}
+                              <View
+                                className="recipe-cover"
+                                onClick={() =>
+                                  Taro.navigateTo({
+                                    url: `/pages/recipe/detail?id=${recipe.id}`,
+                                  })
+                                }
+                              >
+                                <Image
+                                  className="cover-image"
+                                  src={
+                                    recipe.image_path ||
+                                    'https://via.placeholder.com/400x300'
+                                  }
+                                  mode="aspectFill"
+                                />
+                                <View className="cover-overlay">
+                                  <Text className="recipe-name">
+                                    {recipe.name}
+                                  </Text>
+                                  <View className="recipe-meta">
+                                    {recipe.total_time_minutes && (
+                                      <Text className="meta-item">
+                                        ⏱ {recipe.total_time_minutes}分钟
+                                      </Text>
+                                    )}
+                                    <Text className="meta-item">
+                                      🔥{' '}
+                                      {['简单', '较易', '中等', '较难', '困难'][
+                                        recipe.difficulty - 1
+                                      ] || '未知'}
+                                    </Text>
+                                  </View>
+                                </View>
+                              </View>
+                              {/* 推荐理由 */}
+                              {recipe.reason && (
+                                <View className="reason-section">
+                                  <View className="reason-accent" />
+                                  <View className="reason-content">
+                                    <Text className="reason-badge">
+                                      💡 推荐理由
+                                    </Text>
+                                    <Text className="reason-text">
+                                      "{recipe.reason}"
+                                    </Text>
+                                  </View>
+                                </View>
+                              )}
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </>
+                  ) : (
+                    <View className="ai-empty-state">
+                      <Text className="empty-icon">🍽️</Text>
+                      <Text className="empty-title">暂无推荐结果</Text>
+                      <Text className="empty-desc">
+                        AI 未能为您生成推荐，请重试
+                      </Text>
+                      <View
+                        className={`retry-btn ${aiLoading ? 'loading' : ''}`}
+                        onClick={() => {
+                          if (aiLoading) return;
+                          generateAiRecommendations();
+                        }}
+                      >
+                        {aiLoading ? (
+                          <>
+                            <View className="refresh-spinner" />
+                            <Text>生成中...</Text>
+                          </>
+                        ) : (
+                          <Text>重新生成</Text>
+                        )}
+                      </View>
+                    </View>
+                  )}
+                </>
+              )}
             </View>
           )}
         </View>
-      )}
 
-      {/* AI 智能推荐功能 */}
-      <View className="ai-recommend-section">
-        <View className="section-header">
-          <View className="header-badge">
-            <Text className="badge-icon">✨</Text>
-            <Text className="badge-text">AI 推荐</Text>
-          </View>
-          <Text className="section-title">智能美食推荐</Text>
-          <Text className="section-desc">
-            基于您的口味偏好 · 当前天气 · 用餐时段
-          </Text>
-        </View>
-
-        {!aiRecommendations ? (
-          <View className="generate-container">
-            {/* 特性标签云 */}
-            <View className="features-cloud">
-              <View className="feature-tag">🎯 个性化</View>
-              <View className="feature-tag">🌈 多样化</View>
-              <View className="feature-tag">⚡ 即时生成</View>
-            </View>
-
-            {/* 智能生成按钮 */}
-            <View
-              className={`smart-generate-btn ${aiLoading ? 'loading' : ''} ${!isUserLoggedIn ? 'disabled' : ''} ${aiError ? 'error' : ''}`}
-              onClick={aiLoading ? undefined : generateAiRecommendations}
-            >
-              {/* 背景光晕效果 */}
-              <View className="btn-glow" />
-
-              {/* 按钮内容 */}
-              <View className="btn-content">
-                {aiLoading ? (
-                  <>
-                    <View className="loading-spinner">
-                      <View className="spinner-ring" />
-                      <View className="spinner-ring" />
-                      <View className="spinner-ring" />
-                    </View>
-                    <View className="btn-text-group">
-                      <Text className="btn-main-text">AI 正在思考</Text>
-                      <Text className="btn-sub-text">为您精选美味...</Text>
-                    </View>
-                  </>
-                ) : aiError ? (
-                  <>
-                    <View className="btn-icon-wrapper">
-                      <Text className="btn-icon">⚠️</Text>
-                    </View>
-                    <View className="btn-text-group">
-                      <Text className="btn-main-text">生成失败</Text>
-                      <Text className="btn-sub-text">{aiError}</Text>
-                    </View>
-                    <Text className="btn-arrow">↻</Text>
-                  </>
-                ) : (
-                  <>
-                    <View className="btn-icon-wrapper">
-                      <Text className="btn-icon">🎨</Text>
-                      <View className="icon-pulse" />
-                    </View>
-                    <View className="btn-text-group">
-                      <Text className="btn-main-text">
-                        {isUserLoggedIn ? '生成专属推荐' : '登录后生成专属推荐'}
-                      </Text>
-                      <Text className="btn-sub-text">
-                        {isUserLoggedIn
-                          ? '点击开启美食之旅'
-                          : '登录后享受个性化推荐'}
-                      </Text>
-                    </View>
-                    <Text className="btn-arrow">→</Text>
-                  </>
-                )}
-              </View>
-
-              {/* 装饰性粒子 */}
-              <View className="particle particle-1">✨</View>
-              <View className="particle particle-2">💫</View>
-              <View className="particle particle-3">⭐</View>
-            </View>
-          </View>
-        ) : (
-          <View className="ai-results">
-            {/* 推荐理由 */}
-            {aiRecommendations.reason && (
-              <View className="reason-card">
-                <Text className="reason-icon">🍳</Text>
-                <Text className="reason-text">{aiRecommendations.reason}</Text>
-              </View>
-            )}
-
-            {/* 推荐菜谱列表 */}
-            <View className="recipes-grid">
-              {aiRecommendations.recipes.map(recipe => (
-                <RecipeCard key={recipe.id} recipe={recipe} layout="grid" />
-              ))}
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* 底部间距 */}
-      <View className="bottom-spacer" />
-    </ScrollView>
+        {/* 底部间距 */}
+        <View className="bottom-spacer" />
+      </ScrollView>
+    </View>
   );
 };
 

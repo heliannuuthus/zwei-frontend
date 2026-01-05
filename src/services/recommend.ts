@@ -259,38 +259,40 @@ export interface RecommendRequest {
 }
 
 /**
+ * 推荐菜品项（包含推荐理由）
+ */
+export interface RecommendRecipeItem {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  difficulty: number;
+  tags: Record<string, string[]>;
+  image_path?: string;
+  total_time_minutes?: number;
+  reason: string; // 该菜品的推荐理由
+}
+
+/**
  * 推荐响应
  */
 export interface RecommendResponse {
-  recipes: Array<{
-    id: string;
-    name: string;
-    description: string;
-    category: string;
-    difficulty: number;
-    tags: Record<string, string[]>;
-    image_path: string;
-    total_time_minutes: number;
-  }>;
-  reason: string; // LLM 生成的推荐理由
-  weather: {
-    temperature: number;
-    humidity: number;
-    weather: string;
-    city?: string;
-  } | null;
-  meal_time: string;
-  season: string;
-  temperature: string;
+  recipes: RecommendRecipeItem[];
+  summary: string; // LLM 生成的一句话整体评价
+  remaining: number; // 今日剩余推荐次数
 }
 
 /**
  * 获取 LLM 推荐（支持可选登录）
+ * @param location 位置信息
+ * @param limit 推荐数量
+ * @param excludeIds 排除的菜谱 ID（换一批时传入已推荐的）
  * 超时时间：30秒（30000ms）
  */
 export async function getRecommendations(
   location: LocationInfo,
-  limit: number = 6
+  limit: number = 6,
+  excludeIds?: string[]
 ): Promise<RecommendResponse> {
   return request<RecommendResponse>(`/api/recommend?limit=${limit}`, {
     method: 'POST',
@@ -298,6 +300,7 @@ export async function getRecommendations(
       latitude: location.latitude,
       longitude: location.longitude,
       timestamp: Date.now(),
+      exclude_ids: excludeIds,
     }),
     timeout: 30000, // 30秒超时
   });

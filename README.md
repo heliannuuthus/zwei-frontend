@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-**Choosy** 是一个基于 Taro 4.x 和 Taro UI 的微信小程序，主要解决"每天吃什么"的问题。通过 AI 能力，提供智能菜品推荐、烹饪教程和外卖推荐，帮助用户更便捷地决定每日饮食。
+**Choosy** 是一个基于 Taro 4.x 和 Taro UI 的微信小程序，主要解决"每天吃什么"的问题。通过 AI 能力，提供智能菜品推荐和烹饪教程，帮助用户更便捷地决定每日饮食。
 
 ## 技术栈
 
@@ -19,9 +19,11 @@
 ### 1. AI 智能菜品推荐模块
 
 #### 功能描述
+
 通过 AI 分析用户偏好、历史记录、天气、时间等因素，智能推荐每日菜品。
 
 #### 功能点
+
 - **个性化推荐**
   - 基于用户饮食偏好、忌口、过敏信息
   - 学习用户历史选择，优化推荐算法
@@ -40,15 +42,18 @@
   - 支持语音输入
 
 #### 页面规划
+
 - `pages/recommend/index` - 智能推荐主页
 - `pages/recommend/detail` - 菜品详情页
 
 ### 2. 菜谱与烹饪教程模块
 
 #### 功能描述
+
 提供详细菜谱和分步烹饪教程，帮助用户自己动手做菜。
 
 #### 功能点
+
 - **菜谱展示**
   - 高清美食图片展示
   - 详细食材清单（含用量）
@@ -71,49 +76,20 @@
   - 根据图片识别菜品并给出做法
 
 #### 页面规划
+
 - `pages/recipe/index` - 菜谱列表页
 - `pages/recipe/detail` - 菜谱详情页
 - `pages/recipe/cooking` - 烹饪步骤页
 - `pages/recipe/search` - 菜谱搜索页
 
-### 3. 外卖推荐模块
+### 3. 用户中心模块
 
 #### 功能描述
-结合 AI 推荐附近优质外卖，提供智能点餐建议。
 
-#### 功能点
-- **智能外卖推荐**
-  - 基于位置推荐附近餐厅
-  - 根据用户偏好推荐菜品
-  - 考虑价格、评分、配送时间
-  - 推荐优惠活动
-- **餐厅信息**
-  - 餐厅详情、评分、销量
-  - 菜品分类与详情
-  - 用户评价
-  - 配送信息
-- **点餐辅助**
-  - AI 推荐搭配
-  - 营养分析
-  - 价格对比
-  - 历史订单快速复购
-- **AI 能力**
-  - 理解自然语言需求（如"想吃辣的，预算50元"）
-  - 智能搭配推荐
-  - 优惠信息提醒
-  - 个性化推荐
-
-#### 页面规划
-- `pages/takeout/index` - 外卖推荐主页
-- `pages/takeout/restaurant` - 餐厅详情页
-- `pages/takeout/order` - 订单确认页
-
-### 4. 用户中心模块
-
-#### 功能描述
 用户信息管理、偏好设置、历史记录等。
 
 #### 功能点
+
 - **用户信息**
   - 个人资料管理
   - 饮食偏好设置（口味、忌口、过敏）
@@ -128,6 +104,7 @@
   - 隐私设置
 
 #### 页面规划
+
 - `pages/profile/index` - 个人中心
 - `pages/profile/settings` - 设置页
 - `pages/profile/preferences` - 偏好设置
@@ -198,7 +175,6 @@ src/
 │   ├── index/            # 首页
 │   ├── recommend/        # 智能推荐模块
 │   ├── recipe/           # 菜谱模块
-│   ├── takeout/          # 外卖模块
 │   └── profile/          # 用户中心
 ├── components/           # 公共组件
 │   ├── FoodCard/         # 菜品卡片组件
@@ -207,8 +183,7 @@ src/
 │   └── AIChat/           # AI 对话组件
 ├── services/             # API 服务
 │   ├── ai.ts             # AI 服务接口
-│   ├── recipe.ts         # 菜谱服务接口
-│   └── takeout.ts        # 外卖服务接口
+│   └── recipe.ts         # 菜谱服务接口
 ├── utils/                # 工具函数
 │   ├── request.ts        # 请求封装
 │   ├── storage.ts        # 本地存储
@@ -218,13 +193,13 @@ src/
 │   └── useAI.ts          # AI 相关 Hook
 └── types/                # TypeScript 类型定义
     ├── recipe.ts         # 菜谱类型
-    ├── takeout.ts        # 外卖类型
     └── user.ts           # 用户类型
 ```
 
 ## 数据模型规划
 
 ### 菜品数据模型
+
 ```typescript
 interface Dish {
   id: string;
@@ -241,6 +216,7 @@ interface Dish {
 ```
 
 ### 菜谱数据模型
+
 ```typescript
 interface Recipe {
   id: string;
@@ -252,38 +228,22 @@ interface Recipe {
 }
 ```
 
-### 外卖数据模型
-```typescript
-interface Restaurant {
-  id: string;
-  name: string;
-  image: string;
-  rating: number;
-  sales: number;
-  distance: number;
-  deliveryTime: number;
-  dishes: Dish[];
-}
-```
-
 ## 开发计划建议
 
 ### 第一阶段：基础功能
+
 1. 首页设计与实现
 2. 菜品推荐基础功能
 3. 菜谱展示功能
 
 ### 第二阶段：AI 集成
+
 1. AI 服务接口对接
 2. 智能推荐算法优化
 3. 对话式交互实现
 
-### 第三阶段：外卖功能
-1. 外卖推荐功能
-2. 餐厅详情页
-3. 订单流程
+### 第三阶段：优化与完善
 
-### 第四阶段：优化与完善
 1. 性能优化
 2. 用户体验优化
 3. 数据分析与反馈
@@ -295,4 +255,3 @@ interface Restaurant {
 3. **用户体验**：加载状态、错误处理、离线支持
 4. **数据安全**：用户隐私保护、数据加密
 5. **AI 成本**：合理控制 API 调用频率，考虑缓存策略
-

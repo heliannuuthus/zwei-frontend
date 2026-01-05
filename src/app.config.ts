@@ -6,7 +6,6 @@ export default defineAppConfig({
     'pages/recipe/index',
     'pages/recipe/detail',
     'pages/recipe/shopping',
-    'pages/takeout/index',
     'pages/profile/index',
     'pages/profile/favorites',
     'pages/profile/history',

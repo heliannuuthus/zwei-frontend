@@ -160,13 +160,6 @@ const Index = () => {
           <View className="action-icon recipe-icon">📖</View>
           <Text className="action-text">菜谱</Text>
         </View>
-        <View
-          className="action-item"
-          onClick={() => Taro.switchTab({ url: '/pages/takeout/index' })}
-        >
-          <View className="action-icon takeout-icon">🍔</View>
-          <Text className="action-text">外卖</Text>
-        </View>
       </View>
 
       {/* 热门菜谱 */}
