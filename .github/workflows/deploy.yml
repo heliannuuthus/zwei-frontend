@@ -64,7 +64,7 @@ jobs:
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
             pkg.taroConfig = pkg.taroConfig || {};
             pkg.taroConfig.version = '${{ steps.version.outputs.version }}';
-            pkg.taroConfig.desc = '${{ steps.version.outputs.desc }}';
+            pkg.taroConfig.desc = pkg.description || 'CI 自动构建 ${{ steps.version.outputs.version }}';
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
             console.log('Updated taroConfig:', pkg.taroConfig);
           "
@@ -74,6 +74,7 @@ jobs:
         env:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_WEAPP_APPID: ${{ secrets.WEAPP_APPID }}
+          WEAPP_DEVELOPER: heliannuuthus
         run: pnpm build:weapp --upload
 
       - name: Build and upload (体验版 - 待审核)
@@ -81,4 +82,5 @@ jobs:
         env:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_WEAPP_APPID: ${{ secrets.WEAPP_APPID }}
+          WEAPP_DEVELOPER: heliannuuthus
         run: pnpm build:weapp --upload

@@ -8,6 +8,9 @@ const ciPluginConfig = {
   weapp: {
     appid: weappAppId,
     privateKeyPath: `key/private.${weappAppId}.key`,
+    setting: {
+      developer: process.env.WEAPP_DEVELOPER || 'heliannuuthus',
+    },
   },
 };
 
