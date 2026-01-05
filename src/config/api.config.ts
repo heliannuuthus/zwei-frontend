@@ -10,7 +10,8 @@ export interface ApiConfigExport {
 }
 
 const apiConfigExport: ApiConfigExport = {
-  API_BASE_URL: process.env.TARO_APP_API_BASE_URL || '',
+  API_BASE_URL:
+    process.env.TARO_APP_API_BASE_URL || 'https://choosy.heliannuuthus.com',
   API_TIMEOUT: 10000,
   API_RETRIES: 3,
 };
