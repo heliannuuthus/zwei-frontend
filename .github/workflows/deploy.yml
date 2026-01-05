@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install miniprogram-ci
+        run: pnpm add -D miniprogram-ci
+
       - name: Type check
         run: pnpm type:check
 
