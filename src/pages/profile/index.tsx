@@ -224,10 +224,10 @@ const Profile = () => {
   // 菜单项配置
   const menuItems: MenuItem[] = [
     {
-      icon: 'settings',
-      title: '设置',
+      icon: 'user',
+      title: '个人中心',
       onClick: () => {
-        Taro.showToast({ title: '功能开发中', icon: 'none' });
+        Taro.navigateTo({ url: '/pages/profile/settings' });
       },
     },
     {

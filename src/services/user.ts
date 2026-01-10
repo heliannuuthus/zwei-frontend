@@ -28,6 +28,8 @@ export interface UserInfo {
   openid: string; // 系统生成的唯一标识（对外 ID）
   nickname?: string;
   avatar?: string;
+  phone?: string; // 脱敏后的手机号，如 138****8000
+  gender?: 0 | 1 | 2; // 性别 0未知 1男 2女
 }
 
 // Token 请求参数
@@ -253,6 +255,7 @@ export async function fetchProfile(): Promise<UserInfo | null> {
 export async function updateProfile(data: {
   nickname?: string;
   avatar?: string;
+  gender?: 0 | 1 | 2;
 }): Promise<UserInfo | null> {
   // 没有 token 直接返回
   const token = getAccessToken();
@@ -279,4 +282,29 @@ export async function updateProfile(data: {
     console.error('[User] 更新 profile 失败:', error);
     throw error;
   }
+}
+
+/**
+ * 绑定手机号
+ * @param code 微信授权返回的动态令牌
+ */
+export async function bindPhone(code: string): Promise<void> {
+  // 没有 token 直接返回
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('未登录');
+  }
+
+  // 检查 token 是否过期，过期则刷新
+  if (isTokenExpiringSoon()) {
+    const refreshed = await refreshToken();
+    if (!refreshed) {
+      throw new Error('登录已过期');
+    }
+  }
+
+  await request('/api/auth/bindPhone', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+  });
 }
