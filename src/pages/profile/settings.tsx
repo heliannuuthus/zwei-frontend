@@ -324,7 +324,9 @@ const Settings = () => {
             {GENDER_OPTIONS.map(opt => (
               <View
                 key={opt.value}
-                className={`action-sheet-item ${userInfo?.gender === opt.value ? 'active' : ''}`}
+                className={`action-sheet-item ${
+                  userInfo?.gender === opt.value ? 'active' : ''
+                }`}
                 onClick={() => handleSelectGender(opt.value as 0 | 1 | 2)}
               >
                 <Text className="action-sheet-text">{opt.label}</Text>
