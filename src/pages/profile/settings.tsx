@@ -175,9 +175,7 @@ const Settings = () => {
 
   // 获取性别显示文本
   const getGenderLabel = (gender?: 0 | 1 | 2) => {
-    return (
-      GENDER_OPTIONS.find(opt => opt.value === gender)?.label || '未设置'
-    );
+    return GENDER_OPTIONS.find(opt => opt.value === gender)?.label || '未设置';
   };
 
   if (loading) {
@@ -229,9 +227,7 @@ const Settings = () => {
         <View className="section-item" onClick={handleOpenNicknameModal}>
           <Text className="item-label">昵称</Text>
           <View className="item-value-wrapper">
-            <Text className="item-value">
-              {userInfo?.nickname || '未设置'}
-            </Text>
+            <Text className="item-value">{userInfo?.nickname || '未设置'}</Text>
             <AtIcon value="chevron-right" size="18" color="#ccc" />
           </View>
         </View>
@@ -318,10 +314,7 @@ const Settings = () => {
           className="modal-mask"
           onClick={() => setGenderPickerVisible(false)}
         >
-          <View
-            className="action-sheet"
-            onClick={e => e.stopPropagation()}
-          >
+          <View className="action-sheet" onClick={e => e.stopPropagation()}>
             <View className="action-sheet-header">
               <Text className="action-sheet-title">选择性别</Text>
             </View>
