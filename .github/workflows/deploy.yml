@@ -1,4 +1,4 @@
-name: Deploy WeApp
+name: Deploy Mini Programs
 
 on:
   push:
@@ -32,10 +32,17 @@ jobs:
       - name: Type check
         run: pnpm type:check
 
-      - name: Write private key
+      - name: Write private keys
         run: |
           mkdir -p key
-          echo "${{ secrets.WEAPP_PRIVATE_KEY }}" > key/private.${{ secrets.WEAPP_APPID }}.key
+          # 微信小程序私钥
+          if [ -n "${{ secrets.WEAPP_PRIVATE_KEY }}" ]; then
+            echo "${{ secrets.WEAPP_PRIVATE_KEY }}" > key/private.${{ secrets.WEAPP_APPID }}.key
+          fi
+          # 支付宝小程序私钥
+          if [ -n "${{ secrets.ALIPAY_PRIVATE_KEY }}" ] && [ -n "${{ secrets.ALIPAY_APPID }}" ]; then
+            echo "${{ secrets.ALIPAY_PRIVATE_KEY }}" > key/private.${{ secrets.ALIPAY_APPID }}.key
+          fi
 
       - name: Get version info
         id: version
@@ -69,18 +76,80 @@ jobs:
             console.log('Updated taroConfig:', pkg.taroConfig);
           "
 
-      - name: Build and upload (开发版)
+      # 合并到 main 分支：提交预览版
+      - name: Build and preview (微信小程序 - 预览版)
         if: steps.version.outputs.is_release == 'false'
         env:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_WEAPP_APPID: ${{ secrets.WEAPP_APPID }}
           WEAPP_DEVELOPER: heliannuuthus
-        run: pnpm build:weapp --upload
+        run: pnpm build:weapp --preview
+        continue-on-error: true
 
-      - name: Build and upload (体验版 - 待审核)
+      - name: Build and preview (抖音小程序 - 预览版)
+        if: steps.version.outputs.is_release == 'false'
+        env:
+          TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          TARO_APP_TT_APPID: ${{ secrets.TT_APPID }}
+          TT_EMAIL: ${{ secrets.TT_EMAIL }}
+          TT_PASSWORD: ${{ secrets.TT_PASSWORD }}
+        run: |
+          if [ -n "$TARO_APP_TT_APPID" ]; then
+            pnpm build:tt --preview
+          else
+            echo "跳过抖音小程序构建（未配置 TT_APPID）"
+          fi
+        continue-on-error: true
+
+      - name: Build and preview (支付宝小程序 - 预览版)
+        if: steps.version.outputs.is_release == 'false'
+        env:
+          TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          TARO_APP_ALIPAY_APPID: ${{ secrets.ALIPAY_APPID }}
+          ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
+        run: |
+          if [ -n "$TARO_APP_ALIPAY_APPID" ]; then
+            pnpm build:alipay --preview
+          else
+            echo "跳过支付宝小程序构建（未配置 ALIPAY_APPID）"
+          fi
+        continue-on-error: true
+
+      # 打 tag 后：提交代码审核
+      - name: Build and upload (微信小程序 - 提交审核)
         if: steps.version.outputs.is_release == 'true'
         env:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_WEAPP_APPID: ${{ secrets.WEAPP_APPID }}
           WEAPP_DEVELOPER: heliannuuthus
         run: pnpm build:weapp --upload
+        continue-on-error: true
+
+      - name: Build and upload (抖音小程序 - 提交审核)
+        if: steps.version.outputs.is_release == 'true'
+        env:
+          TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          TARO_APP_TT_APPID: ${{ secrets.TT_APPID }}
+          TT_EMAIL: ${{ secrets.TT_EMAIL }}
+          TT_PASSWORD: ${{ secrets.TT_PASSWORD }}
+        run: |
+          if [ -n "$TARO_APP_TT_APPID" ]; then
+            pnpm build:tt --upload
+          else
+            echo "跳过抖音小程序构建（未配置 TT_APPID）"
+          fi
+        continue-on-error: true
+
+      - name: Build and upload (支付宝小程序 - 提交审核)
+        if: steps.version.outputs.is_release == 'true'
+        env:
+          TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          TARO_APP_ALIPAY_APPID: ${{ secrets.ALIPAY_APPID }}
+          ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
+        run: |
+          if [ -n "$TARO_APP_ALIPAY_APPID" ]; then
+            pnpm build:alipay --upload
+          else
+            echo "跳过支付宝小程序构建（未配置 ALIPAY_APPID）"
+          fi
+        continue-on-error: true
