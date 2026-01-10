@@ -3,6 +3,8 @@ import devConfig from './dev';
 import prodConfig from './prod';
 
 const weappAppId = process.env.TARO_APP_WEAPP_APPID || 'wxe26f0b5a99b12e96';
+const ttAppId = process.env.TARO_APP_TT_APPID || '';
+const alipayAppId = process.env.TARO_APP_ALIPAY_APPID || '';
 
 const ciPluginConfig = {
   weapp: {
@@ -12,6 +14,20 @@ const ciPluginConfig = {
       developer: process.env.WEAPP_DEVELOPER || 'heliannuuthus',
     },
   },
+  tt: ttAppId
+    ? {
+        email: process.env.TT_EMAIL || '',
+        password: process.env.TT_PASSWORD || '',
+        appid: ttAppId,
+      }
+    : undefined,
+  alipay: alipayAppId
+    ? {
+        appid: alipayAppId,
+        toolId: process.env.ALIPAY_TOOL_ID || '',
+        privateKeyPath: `key/private.${alipayAppId}.key`,
+      }
+    : undefined,
 };
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
