@@ -308,3 +308,38 @@ export async function bindPhone(code: string): Promise<void> {
     body: JSON.stringify({ code }),
   });
 }
+
+/**
+ * 统计数据响应类型
+ */
+export interface StatsResponse {
+  favorites: number; // 收藏数
+  history: number; // 浏览历史数
+}
+
+/**
+ * 获取用户统计数据（收藏数、浏览历史数）
+ */
+export async function fetchStats(): Promise<StatsResponse | null> {
+  // 没有 token 直接返回
+  const token = getAccessToken();
+  if (!token) {
+    return null;
+  }
+
+  // 检查 token 是否过期，过期则刷新
+  if (isTokenExpiringSoon()) {
+    const refreshed = await refreshToken();
+    if (!refreshed) {
+      return null;
+    }
+  }
+
+  try {
+    const stats = await request<StatsResponse>('/api/auth/stats');
+    return stats;
+  } catch (error) {
+    console.error('[User] 获取统计数据失败:', error);
+    return null;
+  }
+}

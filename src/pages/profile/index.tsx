@@ -1,37 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, Button, OpenData, Image, Input } from '@tarojs/components';
+import { View, Text, OpenData, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import type { ButtonProps, InputProps } from '@tarojs/components';
 import { AtIcon } from 'taro-ui';
 import {
   wxLogin,
   logout,
   isLoggedIn,
   fetchProfile,
-  updateProfile,
+  fetchStats,
   UserInfo,
 } from '../../services/user';
 import footprintIcon from '../../assets/icons/footprint.svg';
 import cartIcon from '../../assets/icons/cart.svg';
-import starFilledIcon from '../../assets/icons/star-filled.svg';
+import starIcon from '../../assets/icons/star-outline.svg';
 import './index.scss';
-
-// 存储 key
-const COOKING_LIST_KEY = 'cooking_list';
-const FAVORITES_KEY = 'favorites';
-const HISTORY_KEY = 'view_history';
-
-// 获取本地存储数据长度
-const getStorageLength = (key: string): number => {
-  try {
-    const data = Taro.getStorageSync(key);
-    if (!data) return 0;
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed.length : 0;
-  } catch {
-    return 0;
-  }
-};
 
 // 菜单项类型
 interface MenuItem {
@@ -42,30 +24,24 @@ interface MenuItem {
   onClick: () => void;
 }
 
+interface Stats {
+  favorites: number;
+  history: number;
+  cookingList: number;
+}
+
 const Profile = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<Stats>({
     favorites: 0,
     history: 0,
     cookingList: 0,
   });
-  const [nicknameModalVisible, setNicknameModalVisible] = useState(false);
-  const [nicknameInput, setNicknameInput] = useState('');
-
-  // 加载统计数据
-  const loadStats = useCallback(() => {
-    setStats({
-      favorites: getStorageLength(FAVORITES_KEY),
-      history: getStorageLength(HISTORY_KEY),
-      cookingList: getStorageLength(COOKING_LIST_KEY),
-    });
-  }, []);
 
   // 自动静默登录
   const autoSilentLogin = useCallback(async () => {
-    // 如果已经有 token，先验证
     if (isLoggedIn()) {
       const profile = await fetchProfile();
       if (profile) {
@@ -73,11 +49,9 @@ const Profile = () => {
         setUserInfo(profile);
         return;
       }
-      // token 验证失败，清除无效 token
       logout();
     }
 
-    // 没有 token 或验证失败，后台尝试静默登录
     setIsLoggingIn(true);
     try {
       await wxLogin();
@@ -85,39 +59,66 @@ const Profile = () => {
       if (profile) {
         setLoggedIn(true);
         setUserInfo(profile);
-      } else {
-        throw new Error('获取用户信息失败');
       }
     } catch (err) {
       console.error('静默登录失败:', err);
-      // 异步提示认证失败
-      setTimeout(() => {
-        Taro.showToast({
-          title: '认证失败',
-          icon: 'none',
-          duration: 2000,
-        });
-      }, 300);
     } finally {
       setIsLoggingIn(false);
     }
   }, []);
 
+  // 加载统计数据
+  const loadStats = useCallback(async () => {
+    if (!loggedIn) {
+      setStats({ favorites: 0, history: 0, cookingList: 0 });
+      return;
+    }
+
+    // 获取收藏和浏览历史数（从后端）
+    const backendStats = await fetchStats();
+    if (backendStats) {
+      setStats(prev => ({
+        ...prev,
+        favorites: backendStats.favorites,
+        history: backendStats.history,
+      }));
+    }
+
+    // 获取购物清单数（从本地存储）
+    try {
+      const cookingListData = Taro.getStorageSync('cooking_list');
+      const cookingList = cookingListData ? JSON.parse(cookingListData) : [];
+      setStats(prev => ({
+        ...prev,
+        cookingList: Array.isArray(cookingList) ? cookingList.length : 0,
+      }));
+    } catch {
+      setStats(prev => ({ ...prev, cookingList: 0 }));
+    }
+  }, [loggedIn]);
+
+  useEffect(() => {
+    autoSilentLogin();
+  }, [autoSilentLogin]);
+
   useEffect(() => {
     loadStats();
-    autoSilentLogin();
-  }, [loadStats, autoSilentLogin]);
+  }, [loadStats]);
 
-  // useDidShow 只刷新统计数据（可能在其他页面变化）
-  // 用户信息在 useEffect 首次加载，修改后在对应 handler 更新
+  // 当页面显示时刷新数据，确保从个人中心返回后更新头像和昵称
   Taro.useDidShow(() => {
-    loadStats();
+    if (loggedIn) {
+      fetchProfile().then(profile => {
+        if (profile) setUserInfo(profile);
+      });
+      loadStats();
+    } else {
+      setStats({ favorites: 0, history: 0, cookingList: 0 });
+    }
   });
 
-  // 处理登录（用户手动点击登录按钮）
   const handleLogin = useCallback(async () => {
     if (isLoggingIn) return;
-
     setIsLoggingIn(true);
     try {
       await wxLogin();
@@ -125,22 +126,14 @@ const Profile = () => {
       if (profile) {
         setLoggedIn(true);
         setUserInfo(profile);
-        Taro.showToast({ title: '登录成功', icon: 'success' });
-      } else {
-        throw new Error('获取用户信息失败');
       }
     } catch (err) {
       console.error('登录失败:', err);
-      Taro.showToast({
-        title: err instanceof Error ? err.message : '登录失败',
-        icon: 'none',
-      });
     } finally {
       setIsLoggingIn(false);
     }
   }, [isLoggingIn]);
 
-  // 处理退出登录
   const handleLogout = useCallback(() => {
     Taro.showModal({
       title: '确认退出',
@@ -150,92 +143,35 @@ const Profile = () => {
           logout();
           setLoggedIn(false);
           setUserInfo(null);
-          Taro.showToast({ title: '已退出登录', icon: 'none' });
         }
       },
     });
   }, []);
 
-  // 处理选择微信头像
-  const handleChooseAvatar: ButtonProps['onChooseAvatar'] = useCallback(
-    async e => {
-      const avatarUrl = e.detail.avatarUrl;
-      if (!avatarUrl) return;
+  const navigateToSettings = () => {
+    Taro.navigateTo({ url: '/pages/profile/settings' });
+  };
 
-      try {
-        Taro.showLoading({ title: '更新中...' });
-
-        // TODO: 上传图片到服务器获取永久 URL
-        // 目前直接使用微信返回的临时路径
-        const profile = await updateProfile({ avatar: avatarUrl });
-        if (profile) {
-          setUserInfo(profile);
-          Taro.showToast({ title: '头像已更新', icon: 'success' });
-        }
-        Taro.hideLoading();
-      } catch (err) {
-        Taro.hideLoading();
-        console.error('修改头像失败:', err);
-        Taro.showToast({ title: '修改失败', icon: 'none' });
+  // 预览头像
+  const handlePreviewAvatar = useCallback(
+    (e: any) => {
+      e.stopPropagation(); // 阻止冒泡，避免触发进入个人中心
+      if (userInfo?.avatar) {
+        Taro.previewImage({
+          urls: [userInfo.avatar],
+          current: userInfo.avatar,
+        });
       }
     },
-    []
+    [userInfo?.avatar]
   );
-
-  // 打开昵称编辑弹窗
-  const handleOpenNicknameModal = useCallback(() => {
-    setNicknameInput(userInfo?.nickname || '');
-    setNicknameModalVisible(true);
-  }, [userInfo?.nickname]);
-
-  // 处理昵称输入（微信昵称类型的 input）
-  const handleNicknameInput: InputProps['onInput'] = useCallback(e => {
-    setNicknameInput(e.detail.value || '');
-  }, []);
-
-  // 确认修改昵称
-  const handleConfirmNickname = useCallback(async () => {
-    const newNickname = nicknameInput.trim();
-    if (!newNickname) {
-      Taro.showToast({ title: '请输入昵称', icon: 'none' });
-      return;
-    }
-    if (newNickname === userInfo?.nickname) {
-      setNicknameModalVisible(false);
-      return;
-    }
-
-    try {
-      Taro.showLoading({ title: '更新中...' });
-      const profile = await updateProfile({ nickname: newNickname });
-      if (profile) {
-        setUserInfo(profile);
-        setNicknameModalVisible(false);
-        Taro.showToast({ title: '昵称已更新', icon: 'success' });
-      }
-      Taro.hideLoading();
-    } catch (err) {
-      Taro.hideLoading();
-      console.error('修改昵称失败:', err);
-      Taro.showToast({ title: '修改失败', icon: 'none' });
-    }
-  }, [nicknameInput, userInfo?.nickname]);
 
   // 菜单项配置
   const menuItems: MenuItem[] = [
     {
-      icon: 'user',
-      title: '个人中心',
-      onClick: () => {
-        Taro.navigateTo({ url: '/pages/profile/settings' });
-      },
-    },
-    {
       icon: 'help',
       title: '帮助与反馈',
-      onClick: () => {
-        Taro.navigateTo({ url: '/pages/profile/help' });
-      },
+      onClick: () => Taro.navigateTo({ url: '/pages/profile/help' }),
     },
     {
       icon: 'alert-circle',
@@ -253,105 +189,97 @@ const Profile = () => {
 
   return (
     <View className="profile-page">
-      {/* 顶部用户信息区域 */}
       <View className="user-section">
         <View className="user-bg-pattern" />
         <View className="user-content">
           {loggedIn ? (
-            <View className="user-info-row">
-              <Button
-                className="user-avatar-btn"
-                openType="chooseAvatar"
-                onChooseAvatar={handleChooseAvatar}
-              >
-                <View className="user-avatar">
+            <View className="user-card" onClick={navigateToSettings}>
+              <View className="user-info-row">
+                <View className="user-avatar" onClick={handlePreviewAvatar}>
                   {userInfo?.avatar ? (
                     <Image src={userInfo.avatar} mode="aspectFill" />
                   ) : (
                     <OpenData type="userAvatarUrl" />
                   )}
-                  <View className="avatar-edit-hint">
-                    <AtIcon value="camera" size="10" color="#fff" />
+                </View>
+                <View className="user-info-detail">
+                  <View className="user-name-row">
+                    <Text className="nickname-text">
+                      {userInfo?.nickname || 'Hi, 美食家'}
+                    </Text>
                   </View>
+                  <Text className="user-greeting">点击查看并编辑个人资料</Text>
                 </View>
-              </Button>
-              <View className="user-info-detail">
-                <View className="user-name" onClick={handleOpenNicknameModal}>
-                  <Text className="nickname-text">
-                    {userInfo?.nickname || '点击设置昵称'}
-                  </Text>
-                  <AtIcon
-                    value="edit"
-                    size="14"
-                    color="rgba(255,255,255,0.7)"
-                  />
-                </View>
-                <Text className="user-greeting">今天想吃点什么？</Text>
+                <AtIcon
+                  value="chevron-right"
+                  size="20"
+                  color="rgba(255,255,255,0.6)"
+                />
               </View>
             </View>
           ) : (
-            <View className="user-login-row">
-              <View className="user-avatar-placeholder" onClick={handleLogin}>
-                {isLoggingIn ? (
-                  <Text className="loading-text">...</Text>
-                ) : (
-                  <AtIcon value="user" size="36" color="#ccc" />
-                )}
+            <View className="user-login-row" onClick={handleLogin}>
+              <View className="user-avatar-placeholder">
+                <AtIcon value="user" size="36" color="#ccc" />
               </View>
               <View className="login-info">
-                <Button className="login-btn" onClick={handleLogin}>
-                  {isLoggingIn ? '登录中...' : '微信快捷登录'}
-                </Button>
-                <Text className="user-slogan">点击登录，开启美食之旅</Text>
+                <Text className="login-title">点击登录账户</Text>
+                <Text className="login-subtitle">开启你的私人定制美食之旅</Text>
               </View>
             </View>
           )}
+        </View>
+      </View>
 
-          {/* 快捷入口 */}
-          <View className="quick-actions">
-            <View
-              className="action-item"
-              onClick={() => {
-                Taro.navigateTo({ url: '/pages/profile/favorites' });
-              }}
-            >
-              <View className="action-icon">
-                <Image src={starFilledIcon} className="custom-icon" />
-              </View>
-              <Text className="action-label">收藏</Text>
+      <View className="stats-container">
+        <View className="stats-card">
+          <View
+            className="stat-item"
+            onClick={() => Taro.navigateTo({ url: '/pages/profile/favorites' })}
+          >
+            <View className="stat-icon-wrapper">
+              <Image src={starIcon} className="stat-icon" />
+              {stats.favorites > 0 && (
+                <View className="stat-badge">
+                  {stats.favorites > 99 ? '99+' : stats.favorites}
+                </View>
+              )}
             </View>
-            <View
-              className="action-item"
-              onClick={() => {
-                Taro.navigateTo({ url: '/pages/profile/history' });
-              }}
-            >
-              <View className="action-icon">
-                <Image src={footprintIcon} className="custom-icon" />
-              </View>
-              <Text className="action-label">足迹</Text>
+            <Text className="stat-label">收藏</Text>
+          </View>
+          <View className="stat-line" />
+          <View
+            className="stat-item"
+            onClick={() => Taro.navigateTo({ url: '/pages/profile/history' })}
+          >
+            <View className="stat-icon-wrapper">
+              <Image src={footprintIcon} className="stat-icon" />
+              {stats.history > 0 && (
+                <View className="stat-badge">
+                  {stats.history > 99 ? '99+' : stats.history}
+                </View>
+              )}
             </View>
-            <View
-              className="action-item"
-              onClick={() => Taro.navigateTo({ url: '/pages/recipe/shopping' })}
-            >
-              <View className="action-icon">
-                <Image src={cartIcon} className="custom-icon" />
-                {stats.cookingList > 0 && (
-                  <View className="action-badge">
-                    <Text className="badge-text">
-                      {stats.cookingList > 99 ? '99+' : stats.cookingList}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text className="action-label">购物清单</Text>
+            <Text className="stat-label">足迹</Text>
+          </View>
+          <View className="stat-line" />
+          <View
+            className="stat-item"
+            onClick={() => Taro.navigateTo({ url: '/pages/recipe/shopping' })}
+          >
+            <View className="stat-icon-wrapper">
+              <Image src={cartIcon} className="stat-icon" />
+              {stats.cookingList > 0 && (
+                <View className="stat-badge">
+                  {stats.cookingList > 99 ? '99+' : stats.cookingList}
+                </View>
+              )}
             </View>
+            <Text className="stat-label">清单</Text>
           </View>
         </View>
       </View>
 
-      {/* 功能菜单 */}
       <View className="menu-section">
         <View className="menu-group">
           {menuItems.map((item, index) => (
@@ -360,73 +288,26 @@ const Profile = () => {
                 <View className="menu-icon-wrapper">
                   <AtIcon value={item.icon} size="20" color="#E8503A" />
                 </View>
-                <View className="menu-text">
-                  <Text className="menu-title">{item.title}</Text>
-                </View>
+                <Text className="menu-title">{item.title}</Text>
               </View>
-              <View className="menu-item-right">
-                <AtIcon value="chevron-right" size="18" color="#ccc" />
-              </View>
+              <AtIcon value="chevron-right" size="16" color="#ccc" />
             </View>
           ))}
         </View>
       </View>
 
-      {/* 退出登录按钮 */}
       {loggedIn && (
-        <View className="logout-section">
+        <View className="logout-container">
           <View className="logout-btn" onClick={handleLogout}>
-            <Text className="logout-text">退出登录</Text>
+            <Text className="logout-text">退出当前账号</Text>
           </View>
         </View>
       )}
 
-      {/* 底部信息 */}
-      <View className="footer-section">
-        <Text className="footer-text">Choosy · 让每一餐都值得期待</Text>
-        <Text className="footer-version">Version 1.0.0</Text>
+      <View className="footer">
+        <Text className="footer-text">Choosy · 懂你的美食助手</Text>
+        <Text className="footer-version">v1.0.0</Text>
       </View>
-
-      {/* 昵称编辑弹窗 */}
-      {nicknameModalVisible && (
-        <View
-          className="nickname-modal-mask"
-          onClick={() => setNicknameModalVisible(false)}
-        >
-          <View className="nickname-modal" onClick={e => e.stopPropagation()}>
-            <View className="nickname-modal-header">
-              <Text className="nickname-modal-title">修改昵称</Text>
-            </View>
-            <View className="nickname-modal-body">
-              <Input
-                type="nickname"
-                className="nickname-modal-input"
-                placeholder="请输入昵称"
-                value={nicknameInput}
-                onInput={handleNicknameInput}
-                focus={nicknameModalVisible}
-              />
-              <Text className="nickname-modal-hint">
-                💡 点击输入框后选择「使用微信昵称」可快速填入
-              </Text>
-            </View>
-            <View className="nickname-modal-footer">
-              <View
-                className="nickname-modal-btn cancel"
-                onClick={() => setNicknameModalVisible(false)}
-              >
-                <Text>取消</Text>
-              </View>
-              <View
-                className="nickname-modal-btn confirm"
-                onClick={handleConfirmNickname}
-              >
-                <Text>确定</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
     </View>
   );
 };

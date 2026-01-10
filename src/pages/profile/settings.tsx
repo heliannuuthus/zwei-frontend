@@ -10,6 +10,7 @@ import {
   UserInfo,
   isLoggedIn,
 } from '../../services/user';
+import { uploadAvatar } from '../../services/upload';
 import './settings.scss';
 
 // 性别选项
@@ -61,21 +62,45 @@ const Settings = () => {
       const avatarUrl = e.detail.avatarUrl;
       if (!avatarUrl) return;
 
+      // 需要 openid 来生成固定路径
+      if (!userInfo?.openid) {
+        Taro.showToast({ title: '请先登录', icon: 'none' });
+        return;
+      }
+
       try {
-        Taro.showLoading({ title: '更新中...' });
-        const profile = await updateProfile({ avatar: avatarUrl });
-        if (profile) {
-          setUserInfo(profile);
-          Taro.showToast({ title: '头像已更新', icon: 'success' });
-        }
+        Taro.showLoading({ title: '上传中...' });
+
+        // 使用 Taro.uploadFile 上传文件到后端
+        // 后端会立即返回 OSS URL，然后异步上传到 OSS（使用 STS 凭证）
+        const ossUrl = await uploadAvatar(avatarUrl, userInfo.openid);
+
         Taro.hideLoading();
+        Taro.showToast({ title: '头像上传成功', icon: 'success' });
+
+        // 更新本地用户信息（使用返回的 OSS URL）
+        setUserInfo({ ...userInfo, avatar: ossUrl });
+
+        // 后端会异步上传到 OSS，如果是头像会自动更新数据库
+        // 前端可以稍后刷新用户信息获取最新状态（可选）
+        setTimeout(async () => {
+          try {
+            const profile = await fetchProfile();
+            if (profile && profile.avatar) {
+              setUserInfo(profile);
+            }
+          } catch (err) {
+            console.error('刷新用户信息失败:', err);
+          }
+        }, 2000);
       } catch (err) {
         Taro.hideLoading();
         console.error('修改头像失败:', err);
-        Taro.showToast({ title: '修改失败', icon: 'none' });
+        const errorMsg = err instanceof Error ? err.message : '修改失败';
+        Taro.showToast({ title: errorMsg, icon: 'none' });
       }
     },
-    []
+    [userInfo?.openid]
   );
 
   // 打开昵称编辑弹窗
