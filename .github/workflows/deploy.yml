@@ -2,15 +2,21 @@ name: Deploy Mini Programs
 
 on:
   push:
-    branches: [master, main]
     tags: ["v*"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
+    # 只在 tag 推送时部署，避免每次合并 main 都触发部署
+    # 注意：需要在 GitHub 仓库设置中为 production environment 配置审批保护
+    # Settings -> Environments -> production -> Required reviewers
+    if: startsWith(github.ref, 'refs/tags/')
+    environment:
+      name: production
+      # 如果需要 URL，可以在这里配置（可选）
+      # url: https://your-production-url.com
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -47,19 +53,8 @@ jobs:
       - name: Get version info
         id: version
         run: |
-          # 格式：YYYYMMDD-HHMMSS-COMMIT_HASH
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          COMMIT_SHA=$(git rev-parse --short HEAD)
-          AUTO_VERSION="${TIMESTAMP}-${COMMIT_SHA}"
-          
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-            echo "is_release=true" >> $GITHUB_OUTPUT
-          else
-            VERSION="${AUTO_VERSION}"
-            echo "is_release=false" >> $GITHUB_OUTPUT
-          fi
-          
+          # 只在 tag 推送时触发，所以版本直接从 tag 获取
+          VERSION=${GITHUB_REF#refs/tags/}
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "desc=CI 自动构建 ${VERSION}" >> $GITHUB_OUTPUT
           echo "Generated version: ${VERSION}"
@@ -76,48 +71,8 @@ jobs:
             console.log('Updated taroConfig:', pkg.taroConfig);
           "
 
-      # 合并到 main 分支：提交预览版
-      - name: Build and preview (微信小程序 - 预览版)
-        if: steps.version.outputs.is_release == 'false'
-        env:
-          TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
-          TARO_APP_WEAPP_APPID: ${{ secrets.WEAPP_APPID }}
-          WEAPP_DEVELOPER: heliannuuthus
-        run: pnpm build:weapp --preview
-        continue-on-error: true
-
-      - name: Build and preview (抖音小程序 - 预览版)
-        if: steps.version.outputs.is_release == 'false'
-        env:
-          TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
-          TARO_APP_TT_APPID: ${{ secrets.TT_APPID }}
-          TT_EMAIL: ${{ secrets.TT_EMAIL }}
-          TT_PASSWORD: ${{ secrets.TT_PASSWORD }}
-        run: |
-          if [ -n "$TARO_APP_TT_APPID" ]; then
-            pnpm build:tt --preview
-          else
-            echo "跳过抖音小程序构建（未配置 TT_APPID）"
-          fi
-        continue-on-error: true
-
-      - name: Build and preview (支付宝小程序 - 预览版)
-        if: steps.version.outputs.is_release == 'false'
-        env:
-          TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
-          TARO_APP_ALIPAY_APPID: ${{ secrets.ALIPAY_APPID }}
-          ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
-        run: |
-          if [ -n "$TARO_APP_ALIPAY_APPID" ]; then
-            pnpm build:alipay --preview
-          else
-            echo "跳过支付宝小程序构建（未配置 ALIPAY_APPID）"
-          fi
-        continue-on-error: true
-
-      # 打 tag 后：提交代码审核
+      # 只在 tag 推送时触发，直接提交代码审核
       - name: Build and upload (微信小程序 - 提交审核)
-        if: steps.version.outputs.is_release == 'true'
         env:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_WEAPP_APPID: ${{ secrets.WEAPP_APPID }}
@@ -126,7 +81,6 @@ jobs:
         continue-on-error: true
 
       - name: Build and upload (抖音小程序 - 提交审核)
-        if: steps.version.outputs.is_release == 'true'
         env:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_TT_APPID: ${{ secrets.TT_APPID }}
@@ -141,7 +95,6 @@ jobs:
         continue-on-error: true
 
       - name: Build and upload (支付宝小程序 - 提交审核)
-        if: steps.version.outputs.is_release == 'true'
         env:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_ALIPAY_APPID: ${{ secrets.ALIPAY_APPID }}
