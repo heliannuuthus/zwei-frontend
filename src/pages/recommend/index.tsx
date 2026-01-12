@@ -59,12 +59,41 @@ const PermissionRequest = ({
 
   return (
     <View className="permission-container">
-      <View className="permission-icon">🍳</View>
-      <Text className="permission-title">需要获取位置信息</Text>
-      <Text className="permission-desc">
-        为了给您推荐适合当前天气和时间的菜品，
-        我们需要获取您的大概位置来查询天气情况
-      </Text>
+      {/* 顶部装饰 */}
+      <View className="permission-header">
+        <View className="permission-icon-wrapper">
+          <View className="permission-icon">📍</View>
+        </View>
+        <Text className="permission-title">需要获取位置信息</Text>
+        <Text className="permission-subtitle">为您推荐更合适的美食</Text>
+      </View>
+
+      {/* 功能说明卡片 */}
+      <View className="permission-features">
+        <View className="feature-item">
+          <View className="feature-icon">🌤️</View>
+          <View className="feature-content">
+            <Text className="feature-title">了解天气</Text>
+            <Text className="feature-desc">根据天气推荐合适的菜品</Text>
+          </View>
+        </View>
+        <View className="feature-item">
+          <View className="feature-icon">⏰</View>
+          <View className="feature-content">
+            <Text className="feature-title">识别时段</Text>
+            <Text className="feature-desc">早餐、午餐、晚餐精准推荐</Text>
+          </View>
+        </View>
+        <View className="feature-item">
+          <View className="feature-icon">🎯</View>
+          <View className="feature-content">
+            <Text className="feature-title">个性化推荐</Text>
+            <Text className="feature-desc">结合您的偏好和场景</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 授权按钮 */}
       {isDenied ? (
         <AtButton
           type="primary"
@@ -78,11 +107,16 @@ const PermissionRequest = ({
           授权位置
         </AtButton>
       )}
-      <Text className="permission-hint">
-        {isDenied
-          ? '您之前拒绝了位置授权，请在设置中开启'
-          : '我们只获取模糊位置，不会记录您的精确位置'}
-      </Text>
+
+      {/* 隐私提示 */}
+      <View className="permission-privacy">
+        <Text className="privacy-icon">🔒</Text>
+        <Text className="privacy-text">
+          {isDenied
+            ? '您之前拒绝了位置授权，请在设置中开启'
+            : '我们只获取模糊位置，不会记录您的精确位置'}
+        </Text>
+      </View>
     </View>
   );
 };
@@ -437,7 +471,7 @@ const Recommend = () => {
         });
 
         setAiLoading(false);
-        Taro.atMessage({ message: '✨ 推荐生成成功', type: 'success' });
+        Taro.atMessage({ message: '✨ 推荐已更新', type: 'success' });
         // 只有首次生成时滚动到结果区域
         if (!isRefresh) {
           setTimeout(() => {
@@ -641,11 +675,11 @@ const Recommend = () => {
           <View className="section-header">
             <View className="header-badge">
               <Text className="badge-icon">✨</Text>
-              <Text className="badge-text">AI 推荐</Text>
+              <Text className="badge-text">专属推荐</Text>
             </View>
-            <Text className="section-title">智能美食推荐</Text>
+            <Text className="section-title">今日美食推荐</Text>
             <Text className="section-desc">
-              基于您的口味偏好 · 当前天气 · 用餐时段
+              根据您的偏好、天气和用餐时段为您推荐
             </Text>
           </View>
 
@@ -665,18 +699,16 @@ const Recommend = () => {
                       <View className="loading-spinner">
                         <View className="spinner-ring" />
                       </View>
-                      <Text className="btn-main-text">AI 正在思考...</Text>
+                      <Text className="btn-main-text">正在为您匹配...</Text>
                     </>
                   ) : (
                     <>
                       <Text className="btn-icon">✨</Text>
                       <View className="btn-text-group">
                         <Text className="btn-main-text">
-                          {isUserLoggedIn
-                            ? '生成专属推荐'
-                            : '登录后生成专属推荐'}
+                          {isUserLoggedIn ? '获取专属推荐' : '登录后获取推荐'}
                         </Text>
-                        <Text className="btn-sub-text">每日可用 10 次</Text>
+                        <Text className="btn-sub-text">每日可获取 10 次</Text>
                       </View>
                     </>
                   )}
@@ -689,7 +721,7 @@ const Recommend = () => {
                   <View className="error-tip-content">
                     <Text className="error-tip-icon">⚠️</Text>
                     <View className="error-tip-text">
-                      <Text className="error-tip-title">生成失败</Text>
+                      <Text className="error-tip-title">获取失败</Text>
                       <Text className="error-tip-message">{aiError}</Text>
                     </View>
                   </View>
@@ -736,7 +768,7 @@ const Recommend = () => {
                           {aiLoading ? (
                             <>
                               <View className="refresh-spinner" />
-                              <Text className="refresh-text">生成中...</Text>
+                              <Text className="refresh-text">匹配中...</Text>
                             </>
                           ) : (
                             <>
@@ -840,7 +872,7 @@ const Recommend = () => {
                       <Text className="empty-icon">🍽️</Text>
                       <Text className="empty-title">暂无推荐结果</Text>
                       <Text className="empty-desc">
-                        AI 未能为您生成推荐，请重试
+                        暂时无法为您推荐，请稍后重试
                       </Text>
                       <View
                         className={`retry-btn ${aiLoading ? 'loading' : ''}`}

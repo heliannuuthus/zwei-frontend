@@ -41,7 +41,7 @@ async function doRefreshToken(): Promise<boolean> {
     if (!refreshToken) return false;
 
     const response = await Taro.request({
-      url: `${apiConfig.baseURL}/api/auth/token`,
+      url: `${apiConfig.baseURL}/api/token`,
       method: 'POST',
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
       data: `grant_type=refresh_token&refresh_token=${encodeURIComponent(refreshToken)}`,
@@ -141,7 +141,13 @@ async function request<T>(
         }
       }
 
-      const errorMsg = `请求失败: ${response.statusCode} ${response.data?.message || response.data?.detail || ''}`;
+      // 处理 OAuth2Error 格式的错误响应（包含 error_description）
+      const errorData = response.data as any;
+      const errorMsg =
+        errorData?.error_description ||
+        errorData?.message ||
+        errorData?.detail ||
+        `请求失败: ${response.statusCode}`;
       console.error(`[API] ${errorMsg}`);
 
       if (attempt === apiConfig.retries) {

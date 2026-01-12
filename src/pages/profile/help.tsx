@@ -3,7 +3,7 @@ import Taro from '@tarojs/taro';
 import { AtIcon } from 'taro-ui';
 import './help.scss';
 
-const FEEDBACK_EMAIL = 'heliannuuthus@gmail.com';
+const FEEDBACK_EMAIL = 'zwei@heliannuuthus.com';
 
 const Help = () => {
   // 复制邮箱到剪贴板

@@ -6,7 +6,6 @@ import { AtIcon } from 'taro-ui';
 import {
   fetchProfile,
   updateProfile,
-  bindPhone,
   UserInfo,
   isLoggedIn,
 } from '../../services/user';
@@ -152,9 +151,7 @@ const Settings = () => {
 
       try {
         Taro.showLoading({ title: '绑定中...' });
-        await bindPhone(e.detail.code);
-        // 重新获取用户信息
-        const profile = await fetchProfile();
+        const profile = await updateProfile({ phone_code: e.detail.code });
         if (profile) {
           setUserInfo(profile);
         }
@@ -163,14 +160,52 @@ const Settings = () => {
       } catch (err: any) {
         Taro.hideLoading();
         console.error('绑定手机号失败:', err);
-        const msg = err?.message?.includes('已绑定')
-          ? '该手机号已绑定其他账号'
-          : '绑定失败，请重试';
+        // 优先使用错误信息，如果没有则根据关键词判断
+        const errorMsg = err?.message || '';
+        let msg = '绑定失败，请重试';
+        if (errorMsg.includes('已绑定') || errorMsg.includes('phone_bound')) {
+          msg = '该手机号已绑定其他账号';
+        } else if (errorMsg.includes('already_bound')) {
+          msg = '您已绑定手机号';
+        } else if (errorMsg && errorMsg !== '请求失败') {
+          msg = errorMsg;
+        }
         Taro.showToast({ title: msg, icon: 'none' });
       }
     },
     []
   );
+
+  // 处理解绑手机号
+  const handleUnbindPhone = useCallback(async () => {
+    try {
+      const res = await Taro.showActionSheet({
+        itemList: ['解绑手机号'],
+        itemColor: '#E8503A',
+      });
+
+      if (res.tapIndex !== 0) {
+        return;
+      }
+
+      Taro.showLoading({ title: '解绑中...' });
+      const profile = await updateProfile({ phone_code: '' });
+      if (profile) {
+        setUserInfo(profile);
+      }
+      Taro.hideLoading();
+      Taro.showToast({ title: '解绑成功', icon: 'success' });
+    } catch (err: any) {
+      // 用户取消操作（点击取消或蒙层）
+      if (err.errMsg?.includes('cancel')) {
+        return;
+      }
+      Taro.hideLoading();
+      console.error('解绑手机号失败:', err);
+      const errorMsg = err?.message || '解绑失败，请重试';
+      Taro.showToast({ title: errorMsg, icon: 'none' });
+    }
+  }, []);
 
   // 处理选择性别
   const handleSelectGender = useCallback(
@@ -273,11 +308,12 @@ const Settings = () => {
         <View className="section-item phone-item">
           <Text className="item-label">手机号</Text>
           {userInfo?.phone ? (
-            <View className="item-value-wrapper">
+            <View className="item-value-wrapper" onClick={handleUnbindPhone}>
               <Text className="item-value phone-value">{userInfo.phone}</Text>
               <View className="phone-bound-tag">
                 <Text className="tag-text">已绑定</Text>
               </View>
+              <AtIcon value="chevron-right" size="18" color="#ccc" />
             </View>
           ) : (
             <Button

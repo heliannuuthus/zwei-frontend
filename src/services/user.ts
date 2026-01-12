@@ -23,7 +23,7 @@ interface TokenResponse {
   expires_in: number;
 }
 
-// 用户信息类型（匹配后端 /api/auth/profile 返回）
+// 用户信息类型（匹配后端 /api/profile 返回）
 export interface UserInfo {
   openid: string; // 系统生成的唯一标识（对外 ID）
   nickname?: string;
@@ -52,7 +52,7 @@ async function requestToken(
     formData.append('refresh_token', params.refresh_token);
 
   const response = await Taro.request({
-    url: `${apiConfig.API_BASE_URL}/api/auth/token`,
+    url: `${apiConfig.API_BASE_URL}/api/token`,
     method: 'POST',
     header: { 'Content-Type': 'application/x-www-form-urlencoded' },
     data: formData.toString(),
@@ -240,7 +240,7 @@ export async function fetchProfile(): Promise<UserInfo | null> {
 
   // 请求 profile 接口
   try {
-    const profile = await request<UserInfo>('/api/auth/profile');
+    const profile = await request<UserInfo>('/api/profile');
     saveUserInfo(profile);
     return profile;
   } catch (error) {
@@ -256,6 +256,7 @@ export async function updateProfile(data: {
   nickname?: string;
   avatar?: string;
   gender?: 0 | 1 | 2;
+  phone_code?: string; // 小程序授权码，用于绑定手机号；传空字符串表示解绑
 }): Promise<UserInfo | null> {
   // 没有 token 直接返回
   const token = getAccessToken();
@@ -272,7 +273,7 @@ export async function updateProfile(data: {
   }
 
   try {
-    const profile = await request<UserInfo>('/api/auth/profile', {
+    const profile = await request<UserInfo>('/api/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -282,31 +283,6 @@ export async function updateProfile(data: {
     console.error('[User] 更新 profile 失败:', error);
     throw error;
   }
-}
-
-/**
- * 绑定手机号
- * @param code 微信授权返回的动态令牌
- */
-export async function bindPhone(code: string): Promise<void> {
-  // 没有 token 直接返回
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('未登录');
-  }
-
-  // 检查 token 是否过期，过期则刷新
-  if (isTokenExpiringSoon()) {
-    const refreshed = await refreshToken();
-    if (!refreshed) {
-      throw new Error('登录已过期');
-    }
-  }
-
-  await request('/api/auth/bindPhone', {
-    method: 'POST',
-    body: JSON.stringify({ code }),
-  });
 }
 
 /**
@@ -336,7 +312,7 @@ export async function fetchStats(): Promise<StatsResponse | null> {
   }
 
   try {
-    const stats = await request<StatsResponse>('/api/auth/stats');
+    const stats = await request<StatsResponse>('/api/stats');
     return stats;
   } catch (error) {
     console.error('[User] 获取统计数据失败:', error);

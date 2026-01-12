@@ -138,10 +138,10 @@ const Index = () => {
         <View className="banner-section">
           <View className="banner-content">
             <Text className="banner-main-title">今天吃什么？</Text>
-            <Text className="banner-subtitle">让 AI 帮你决定</Text>
+            <Text className="banner-subtitle">为你精选今日美食</Text>
             <View className="banner-button" onClick={navigateToRecommend}>
               <AtIcon value="lightning-bolt" size="16" color="#fff" />
-              <Text className="banner-button-text">智能推荐</Text>
+              <Text className="banner-button-text">查看推荐</Text>
             </View>
           </View>
         </View>
@@ -150,8 +150,8 @@ const Index = () => {
       {/* 快捷入口 */}
       <View className="quick-actions">
         <View className="action-item" onClick={navigateToRecommend}>
-          <View className="action-icon recommend-icon">🤖</View>
-          <Text className="action-text">AI 推荐</Text>
+          <View className="action-icon recommend-icon">✨</View>
+          <Text className="action-text">今日推荐</Text>
         </View>
         <View
           className="action-item"
