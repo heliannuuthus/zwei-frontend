@@ -1,15 +1,13 @@
 {
-  "miniprogramRoot": "dist/",
-  "projectname": "择味",
+  "miniprogramRoot": "./",
+  "projectname": "myApp",
   "description": "烹饪项目",
-  "appid": "ttae6ed8d3300d352501",
+  "appid": "",
   "setting": {
     "urlCheck": true,
     "es6": true,
     "enhance": true,
-    "compileHotReLoad": false,
     "postcss": false,
-    "preloadBackgroundData": false,
     "minified": false,
     "newFeature": true,
     "autoAudits": false,
@@ -37,13 +35,12 @@
     }
   },
   "compileType": "miniprogram",
-  "simulatorType": "wechat",
+  "simulatorType": "alipay",
   "simulatorPluginLibVersion": {},
   "condition": {},
   "packOptions": {
     "ignore": [],
     "include": []
   },
-  "editorSetting": {},
-  "libVersion": "3.11.1"
+  "editorSetting": {}
 }

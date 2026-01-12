@@ -37,6 +37,7 @@ interface TokenRequestParams {
   grant_type: 'authorization_code' | 'refresh_token';
   code?: string; // grant_type=authorization_code 时使用
   refresh_token?: string; // grant_type=refresh_token 时使用
+  idp?: string; // 身份提供方：wechat:mp, douyin:mp, alipay:mp
 }
 
 /**
@@ -183,8 +184,28 @@ export async function ensureValidToken(): Promise<string | null> {
 }
 
 /**
- * 微信登录（静默登录，仅使用 openid）
+ * 获取当前平台对应的 idp
+ */
+function getCurrentPlatformIdP(): string {
+  // Taro.getEnv() 返回 'WEAPP' | 'SWAN' | 'ALIPAY' | 'TT' | 'QQ' | 'JD' | 'H5' | 'RN'
+  const env = Taro.getEnv();
+  switch (env) {
+    case Taro.ENV_TYPE.WEAPP:
+      return 'wechat:mp';
+    case Taro.ENV_TYPE.TT:
+      return 'douyin:mp';
+    case Taro.ENV_TYPE.ALIPAY:
+      return 'alipay:mp';
+    default:
+      // 默认使用微信
+      return 'wechat:mp';
+  }
+}
+
+/**
+ * 登录（自动检测平台）
  * 使用 OAuth2.1 风格的 /token 端点
+ * code 格式：idp:actual_code，如 wechat:mp:xxx
  */
 export async function wxLogin(): Promise<TokenResponse> {
   // 获取 login code
@@ -193,9 +214,13 @@ export async function wxLogin(): Promise<TokenResponse> {
     throw new Error('获取登录凭证失败');
   }
 
+  // 自动检测平台并组合 code
+  const idp = getCurrentPlatformIdP();
+  const combinedCode = `${idp}:${loginRes.code}`;
+
   const response = await requestToken({
     grant_type: 'authorization_code',
-    code: loginRes.code,
+    code: combinedCode,
   });
 
   // 保存 tokens

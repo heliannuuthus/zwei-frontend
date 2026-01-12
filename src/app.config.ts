@@ -20,12 +20,20 @@ export default defineAppConfig({
     backgroundColor: '#FFF9F5',
   },
   lazyCodeLoading: 'requiredComponents',
-  requiredPrivateInfos: ['getFuzzyLocation'],
-  permission: {
-    'scope.userFuzzyLocation': {
-      desc: '用于获取天气信息，为您推荐合适的菜品',
+  // 微信小程序支持 requiredPrivateInfos 和 permission 配置
+  // 抖音小程序不支持自定义 permission，只配置 requiredPrivateInfos
+  // 支付宝小程序不支持这些配置
+  ...(process.env.TARO_ENV === 'weapp' && {
+    requiredPrivateInfos: ['getFuzzyLocation'],
+    permission: {
+      'scope.userFuzzyLocation': {
+        desc: '用于获取天气信息，为您推荐合适的菜品',
+      },
     },
-  },
+  }),
+  ...(process.env.TARO_ENV === 'tt' && {
+    requiredPrivateInfos: ['getFuzzyLocation'],
+  }),
   tabBar: {
     color: '#999999',
     selectedColor: '#E8503A',

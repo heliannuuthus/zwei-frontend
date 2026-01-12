@@ -248,6 +248,104 @@ interface Recipe {
 2. 用户体验优化
 3. 数据分析与反馈
 
+## 环境变量配置
+
+项目使用 Taro 的环境模式配置，支持通过 `.env.development` 和 `.env.production` 文件管理不同环境的配置。
+
+### 环境变量文件
+
+- `.env.development` - 开发环境配置（自动生成，无需手动创建）
+- `.env.production` - 生产环境配置（可选，如不配置则使用默认值）
+
+### 可用环境变量
+
+所有环境变量必须以 `TARO_APP_` 开头：
+
+- `TARO_APP_API_BASE_URL` - API 基础 URL
+  - 开发环境：自动检测本地 IP（如 `http://172.29.213.233:18000`）
+  - 生产环境：`https://choosy.heliannuuthus.com`
+- `TARO_APP_WEAPP_APPID` - 微信小程序 AppID（可选）
+- `TARO_APP_TT_APPID` - 抖音小程序 AppID（可选）
+- `TARO_APP_ALIPAY_APPID` - 支付宝小程序 AppID（可选）
+
+### 使用方法
+
+参考 [taro-playground](https://github.com/wuba/taro-playground) 的简洁命令风格，项目支持以下构建命令：
+
+#### 开发模式（自动生成环境变量，watch 模式）
+
+```bash
+# 微信小程序开发
+npm run weapp
+# 或
+npm run dev:weapp
+
+# 抖音小程序开发
+npm run tt
+# 或
+npm run dev:tt
+
+# 支付宝小程序开发
+npm run alipay
+# 或
+npm run dev:alipay
+
+# H5 开发
+npm run h5
+# 或
+npm run dev:h5
+```
+
+#### 生产构建
+
+```bash
+# 微信小程序生产构建
+npm run build:weapp
+
+# 抖音小程序生产构建
+npm run build:tt
+
+# 支付宝小程序生产构建
+npm run build:alipay
+
+# H5 生产构建
+npm run build:h5
+```
+
+#### 手动设置环境变量
+
+```bash
+# 手动生成开发环境变量文件
+npm run setup:env
+
+# 或指定模式
+npm run setup:env production
+```
+
+#### 自定义环境变量
+
+1. 创建 `.env.development` 或 `.env.production` 文件
+2. 添加以 `TARO_APP_` 开头的环境变量
+3. 运行构建命令时会自动加载对应环境的配置
+
+```bash
+# 示例：创建自定义环境
+echo "TARO_APP_API_BASE_URL=https://api.example.com" > .env.uat
+npm run build:weapp -- --mode uat
+```
+
+#### 环境变量优先级
+
+1. `.env.{mode}` 文件中的配置（如 `.env.development`）
+2. `process.env` 中的环境变量（CI/CD 环境）
+3. `config/index.ts` 中的默认值
+
+更多信息请参考：
+
+- [Taro 环境变量文档](https://docs.taro.zone/docs/envs)
+- [Taro 环境模式配置文档](https://docs.taro.zone/docs/env-mode-config)
+- [taro-playground 项目](https://github.com/wuba/taro-playground)
+
 ## 注意事项
 
 1. **小程序限制**：注意微信小程序的 API 限制和审核规范
@@ -255,3 +353,4 @@ interface Recipe {
 3. **用户体验**：加载状态、错误处理、离线支持
 4. **数据安全**：用户隐私保护、数据加密
 5. **AI 成本**：合理控制 API 调用频率，考虑缓存策略
+6. **环境变量**：`.env.*` 文件已添加到 `.gitignore`，不会提交到仓库

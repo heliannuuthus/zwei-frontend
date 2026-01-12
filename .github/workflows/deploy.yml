@@ -93,7 +93,7 @@ jobs:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_WEAPP_APPID: ${{ secrets.WEAPP_APPID }}
           WEAPP_DEVELOPER: heliannuuthus
-        run: pnpm build:weapp --preview
+        run: pnpm build:weapp --mode production --preview
         continue-on-error: true
 
       - name: Build and preview (抖音小程序 - 预览版)
@@ -105,7 +105,7 @@ jobs:
           TT_PASSWORD: ${{ secrets.TT_PASSWORD }}
         run: |
           if [ -n "$TARO_APP_TT_APPID" ]; then
-            pnpm build:tt --preview
+            pnpm build:tt --mode production --preview
           else
             echo "跳过抖音小程序构建（未配置 TT_APPID）"
           fi
@@ -119,7 +119,7 @@ jobs:
           ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
         run: |
           if [ -n "$TARO_APP_ALIPAY_APPID" ]; then
-            pnpm build:alipay --preview
+            pnpm build:alipay --mode production --preview
           else
             echo "跳过支付宝小程序构建（未配置 ALIPAY_APPID）"
           fi
@@ -132,7 +132,7 @@ jobs:
           TARO_APP_API_BASE_URL: ${{ vars.API_BASE_URL }}
           TARO_APP_WEAPP_APPID: ${{ secrets.WEAPP_APPID }}
           WEAPP_DEVELOPER: heliannuuthus
-        run: pnpm build:weapp --upload
+        run: pnpm build:weapp --mode production --upload
         continue-on-error: true
 
       - name: Build and upload (抖音小程序 - 提交审核)
@@ -144,7 +144,7 @@ jobs:
           TT_PASSWORD: ${{ secrets.TT_PASSWORD }}
         run: |
           if [ -n "$TARO_APP_TT_APPID" ]; then
-            pnpm build:tt --upload
+            pnpm build:tt --mode production --upload
           else
             echo "跳过抖音小程序构建（未配置 TT_APPID）"
           fi
@@ -158,7 +158,7 @@ jobs:
           ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
         run: |
           if [ -n "$TARO_APP_ALIPAY_APPID" ]; then
-            pnpm build:alipay --upload
+            pnpm build:alipay --mode production --upload
           else
             echo "跳过支付宝小程序构建（未配置 ALIPAY_APPID）"
           fi
