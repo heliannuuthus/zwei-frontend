@@ -11,23 +11,19 @@ export interface UploadImageResponse {
 /**
  * 上传头像（使用固定的路径格式，支持覆盖）
  * @param filePath 本地文件路径（微信小程序 chooseAvatar 返回的路径）
- * @param openid 用户 openid，用于生成固定路径 avatars/{openid}.jpg
+ *
+ * 注意：不再需要传入 openid，后端会从认证 token 中获取，确保安全性
  */
-export async function uploadAvatar(
-  filePath: string,
-  openid: string
-): Promise<string> {
+export async function uploadAvatar(filePath: string): Promise<string> {
   try {
-    const objectKey = `avatars/${openid}.jpg`;
-
-    // 使用 Taro.uploadFile 上传文件到后端
-    // 后端会立即返回 OSS URL，然后异步上传到 OSS（使用 STS 凭证）
+    // 使用 prefix 告诉后端这是头像上传，后端会自动使用认证用户的 openid 生成路径
+    // 这样可以防止前端传入错误的 openid 导致安全风险
     const uploadRes = await Taro.uploadFile({
       url: `${apiConfig.API_BASE_URL}/api/upload/image`,
       filePath: filePath,
       name: 'file',
       formData: {
-        'object-key': objectKey,
+        prefix: 'avatars', // 告诉后端这是头像上传
       },
       header: {
         Authorization: `Bearer ${Taro.getStorageSync('access_token')}`,
