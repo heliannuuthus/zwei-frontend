@@ -24,7 +24,7 @@ export interface HistoryListResponse {
 export async function addViewHistory(
   recipeId: string
 ): Promise<HistoryResponse> {
-  return request<HistoryResponse>('/api/history', {
+  return request<HistoryResponse>('/api/user/history', {
     method: 'POST',
     body: JSON.stringify({ recipe_id: recipeId }),
   });
@@ -32,14 +32,14 @@ export async function addViewHistory(
 
 // 删除浏览记录
 export async function removeViewHistory(recipeId: string): Promise<void> {
-  await request<void>(`/api/history/${recipeId}`, {
+  await request<void>(`/api/user/history/${recipeId}`, {
     method: 'DELETE',
   });
 }
 
 // 清空浏览历史
 export async function clearViewHistory(): Promise<void> {
-  await request<void>('/api/history', {
+  await request<void>('/api/user/history', {
     method: 'DELETE',
   });
 }
@@ -54,7 +54,7 @@ export async function getViewHistory(params?: {
   if (params?.offset) queryParams.append('offset', params.offset.toString());
 
   const queryString = queryParams.toString();
-  const url = `/api/history${queryString ? `?${queryString}` : ''}`;
+  const url = `/api/user/history${queryString ? `?${queryString}` : ''}`;
 
   return request<HistoryListResponse>(url);
 }
