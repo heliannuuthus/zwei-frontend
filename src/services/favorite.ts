@@ -34,7 +34,7 @@ export interface BatchCheckResponse {
 
 // 添加收藏
 export async function addFavorite(recipeId: string): Promise<FavoriteResponse> {
-  return request<FavoriteResponse>('/api/favorites', {
+  return request<FavoriteResponse>('/api/user/favorites', {
     method: 'POST',
     body: JSON.stringify({ recipe_id: recipeId }),
   });
@@ -42,7 +42,7 @@ export async function addFavorite(recipeId: string): Promise<FavoriteResponse> {
 
 // 取消收藏
 export async function removeFavorite(recipeId: string): Promise<void> {
-  await request<void>(`/api/favorites/${recipeId}`, {
+  await request<void>(`/api/user/favorites/${recipeId}`, {
     method: 'DELETE',
   });
 }
@@ -50,7 +50,7 @@ export async function removeFavorite(recipeId: string): Promise<void> {
 // 检查是否已收藏
 export async function checkFavorite(recipeId: string): Promise<boolean> {
   const res = await request<CheckFavoriteResponse>(
-    `/api/favorites/${recipeId}/check`
+    `/api/user/favorites/${recipeId}/check`
   );
   return res.is_favorite;
 }
@@ -65,7 +65,7 @@ export async function getFavorites(params?: {
   if (params?.offset) queryParams.append('offset', params.offset.toString());
 
   const queryString = queryParams.toString();
-  const url = `/api/favorites${queryString ? `?${queryString}` : ''}`;
+  const url = `/api/user/favorites${queryString ? `?${queryString}` : ''}`;
 
   return request<FavoriteListResponse>(url);
 }
@@ -74,10 +74,13 @@ export async function getFavorites(params?: {
 export async function batchCheckFavorites(
   recipeIds: string[]
 ): Promise<string[]> {
-  const res = await request<BatchCheckResponse>('/api/favorites/batch-check', {
-    method: 'POST',
-    body: JSON.stringify({ recipe_ids: recipeIds }),
-  });
+  const res = await request<BatchCheckResponse>(
+    '/api/user/favorites/batch-check',
+    {
+      method: 'POST',
+      body: JSON.stringify({ recipe_ids: recipeIds }),
+    }
+  );
   return res.favorited_ids;
 }
 

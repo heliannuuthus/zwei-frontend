@@ -61,7 +61,7 @@ const Settings = () => {
       const avatarUrl = e.detail.avatarUrl;
       if (!avatarUrl) return;
 
-      // 需要 openid 来生成固定路径
+      // 检查是否已登录（上传需要 token）
       if (!userInfo?.openid) {
         Taro.showToast({ title: '请先登录', icon: 'none' });
         return;
@@ -71,8 +71,8 @@ const Settings = () => {
         Taro.showLoading({ title: '上传中...' });
 
         // 使用 Taro.uploadFile 上传文件到后端
-        // 后端会立即返回 OSS URL，然后异步上传到 OSS（使用 STS 凭证）
-        const ossUrl = await uploadAvatar(avatarUrl, userInfo.openid);
+        // 后端会从认证 token 中获取 openid，自动生成正确的路径，确保安全性
+        const ossUrl = await uploadAvatar(avatarUrl);
 
         Taro.hideLoading();
         Taro.showToast({ title: '头像上传成功', icon: 'success' });
@@ -325,6 +325,20 @@ const Settings = () => {
               <AtIcon value="chevron-right" size="18" color="#E8503A" />
             </Button>
           )}
+        </View>
+      </View>
+
+      {/* 偏好设置 */}
+      <View className="settings-section">
+        <View
+          className="section-item"
+          onClick={() => Taro.navigateTo({ url: '/pages/profile/preference' })}
+        >
+          <Text className="item-label">偏好设置</Text>
+          <View className="item-value-wrapper">
+            <Text className="item-value">口味、忌口、过敏</Text>
+            <AtIcon value="chevron-right" size="18" color="#ccc" />
+          </View>
         </View>
       </View>
 

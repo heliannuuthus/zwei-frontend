@@ -23,7 +23,7 @@ interface TokenResponse {
   expires_in: number;
 }
 
-// 用户信息类型（匹配后端 /api/profile 返回）
+// 用户信息类型（匹配后端 /api/user/profile 返回）
 export interface UserInfo {
   openid: string; // 系统生成的唯一标识（对外 ID）
   nickname?: string;
@@ -240,7 +240,7 @@ export async function fetchProfile(): Promise<UserInfo | null> {
 
   // 请求 profile 接口
   try {
-    const profile = await request<UserInfo>('/api/profile');
+    const profile = await request<UserInfo>('/api/user/profile');
     saveUserInfo(profile);
     return profile;
   } catch (error) {
@@ -273,7 +273,7 @@ export async function updateProfile(data: {
   }
 
   try {
-    const profile = await request<UserInfo>('/api/profile', {
+    const profile = await request<UserInfo>('/api/user/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });

@@ -1,0 +1,142 @@
+@use '../../styles/variables' as *;
+
+.preference-page {
+  min-height: 100vh;
+  background: $bg-color;
+  padding-bottom: calc(
+    240rpx + env(safe-area-inset-bottom)
+  ); // 为底部按钮留出空间
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 80rpx 40rpx;
+
+  .loading-text,
+  .error-text {
+    font-size: 28rpx;
+    color: $text-hint;
+    margin-bottom: 40rpx;
+  }
+
+  .retry-btn {
+    margin-top: 40rpx;
+  }
+}
+
+.preference-content {
+  padding: 40rpx;
+}
+
+.preference-section {
+  background: $bg-white;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: $card-shadow;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid $border-color;
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.section-count {
+  font-size: 24rpx;
+  color: $text-hint;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  background: $bg-color;
+  border: 2rpx solid transparent;
+  border-radius: 16rpx;
+  transition: all 0.2s;
+  min-width: 280rpx;
+  flex: 1;
+  max-width: calc(50% - 8rpx);
+  box-sizing: border-box;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  .option-label {
+    font-size: 28rpx;
+    color: $text-primary;
+    font-weight: 500;
+  }
+
+  &.selected {
+    background: #fff5f5;
+    border-color: $primary-color;
+    color: $primary-color;
+
+    .option-label {
+      color: $primary-color;
+      font-weight: 600;
+    }
+  }
+}
+
+.preference-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: $bg-white;
+  padding: 24rpx 40rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.08);
+  z-index: 100;
+
+  .save-btn {
+    width: 100%;
+    height: 88rpx;
+    border-radius: 16rpx;
+    font-size: 32rpx;
+    font-weight: 600;
+    background: linear-gradient(135deg, $primary-color 0%, #ff6b4a 100%);
+    border: none;
+    box-shadow: 0 8rpx 24rpx rgba(232, 80, 58, 0.3);
+    color: #fff;
+
+    &:active {
+      opacity: 0.9;
+    }
+
+    &[disabled] {
+      opacity: 0.6;
+    }
+  }
+}
