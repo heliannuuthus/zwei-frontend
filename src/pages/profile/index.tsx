@@ -15,15 +15,6 @@ import cartIcon from '../../assets/icons/cart.svg';
 import starIcon from '../../assets/icons/star-outline.svg';
 import './index.scss';
 
-// 菜单项类型
-interface MenuItem {
-  icon: string;
-  title: string;
-  subtitle?: string;
-  badge?: number;
-  onClick: () => void;
-}
-
 interface Stats {
   favorites: number;
   history: number;
@@ -31,7 +22,6 @@ interface Stats {
 }
 
 const Profile = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [stats, setStats] = useState<Stats>({
@@ -45,7 +35,6 @@ const Profile = () => {
     if (isLoggedIn()) {
       const profile = await fetchProfile();
       if (profile) {
-        setLoggedIn(true);
         setUserInfo(profile);
         return;
       }
@@ -57,7 +46,6 @@ const Profile = () => {
       await wxLogin();
       const profile = await fetchProfile();
       if (profile) {
-        setLoggedIn(true);
         setUserInfo(profile);
       }
     } catch (err) {
@@ -67,9 +55,13 @@ const Profile = () => {
     }
   }, []);
 
+  useEffect(() => {
+    autoSilentLogin();
+  }, [autoSilentLogin]);
+
   // 加载统计数据
   const loadStats = useCallback(async () => {
-    if (!loggedIn) {
+    if (!isLoggedIn()) {
       setStats({ favorites: 0, history: 0, cookingList: 0 });
       return;
     }
@@ -95,22 +87,19 @@ const Profile = () => {
     } catch {
       setStats(prev => ({ ...prev, cookingList: 0 }));
     }
-  }, [loggedIn]);
-
-  useEffect(() => {
-    autoSilentLogin();
-  }, [autoSilentLogin]);
+  }, []);
 
   useEffect(() => {
     loadStats();
   }, [loadStats]);
 
-  // 当页面显示时刷新数据，确保从个人中心返回后更新头像和昵称
-  Taro.useDidShow(() => {
-    if (loggedIn) {
-      fetchProfile().then(profile => {
-        if (profile) setUserInfo(profile);
-      });
+  // 当页面显示时刷新数据
+  Taro.useDidShow(async () => {
+    if (isLoggedIn()) {
+      const profile = await fetchProfile();
+      if (profile) {
+        setUserInfo(profile);
+      }
       loadStats();
     } else {
       setStats({ favorites: 0, history: 0, cookingList: 0 });
@@ -124,7 +113,6 @@ const Profile = () => {
       await wxLogin();
       const profile = await fetchProfile();
       if (profile) {
-        setLoggedIn(true);
         setUserInfo(profile);
       }
     } catch (err) {
@@ -134,6 +122,10 @@ const Profile = () => {
     }
   }, [isLoggingIn]);
 
+  const navigateToSettings = () => {
+    Taro.navigateTo({ url: '/pages/profile/settings' });
+  };
+
   const handleLogout = useCallback(() => {
     Taro.showModal({
       title: '确认退出',
@@ -141,21 +133,17 @@ const Profile = () => {
       success: res => {
         if (res.confirm) {
           logout();
-          setLoggedIn(false);
           setUserInfo(null);
+          setStats({ favorites: 0, history: 0, cookingList: 0 });
         }
       },
     });
   }, []);
 
-  const navigateToSettings = () => {
-    Taro.navigateTo({ url: '/pages/profile/settings' });
-  };
-
   // 预览头像
   const handlePreviewAvatar = useCallback(
     (e: any) => {
-      e.stopPropagation(); // 阻止冒泡，避免触发进入个人中心
+      e.stopPropagation();
       if (userInfo?.avatar) {
         Taro.previewImage({
           urls: [userInfo.avatar],
@@ -166,40 +154,27 @@ const Profile = () => {
     [userInfo?.avatar]
   );
 
-  // 菜单项配置
-  const menuItems: MenuItem[] = [
-    {
-      icon: 'help',
-      title: '帮助与反馈',
-      onClick: () => Taro.navigateTo({ url: '/pages/profile/help' }),
-    },
-    {
-      icon: 'alert-circle',
-      title: '关于我们',
-      onClick: () => {
-        Taro.showModal({
-          title: 'Choosy',
-          content: '让每一餐都值得期待 ✨\n\n版本：1.0.0',
-          showCancel: false,
-          confirmText: '知道了',
-        });
-      },
-    },
-  ];
-
   return (
     <View className="profile-page">
       <View className="user-section">
         <View className="user-bg-pattern" />
         <View className="user-content">
-          {loggedIn ? (
+          {isLoggedIn() ? (
             <View className="user-card" onClick={navigateToSettings}>
               <View className="user-info-row">
                 <View className="user-avatar" onClick={handlePreviewAvatar}>
                   {userInfo?.avatar ? (
-                    <Image src={userInfo.avatar} mode="aspectFill" />
-                  ) : (
+                    <Image
+                      src={userInfo.avatar}
+                      mode="aspectFill"
+                      className="avatar-img"
+                    />
+                  ) : Taro.getEnv() === Taro.ENV_TYPE.WEAPP ? (
                     <OpenData type="userAvatarUrl" />
+                  ) : (
+                    <View className="avatar-placeholder-inner">
+                      <AtIcon value="user" size="48" color="#ccc" />
+                    </View>
                   )}
                 </View>
                 <View className="user-info-detail">
@@ -282,21 +257,41 @@ const Profile = () => {
 
       <View className="menu-section">
         <View className="menu-group">
-          {menuItems.map((item, index) => (
-            <View key={index} className="menu-item" onClick={item.onClick}>
-              <View className="menu-item-left">
-                <View className="menu-icon-wrapper">
-                  <AtIcon value={item.icon} size="20" color="#E8503A" />
-                </View>
-                <Text className="menu-title">{item.title}</Text>
+          <View
+            className="menu-item"
+            onClick={() => Taro.navigateTo({ url: '/pages/profile/help' })}
+          >
+            <View className="menu-item-left">
+              <View className="menu-icon-wrapper">
+                <AtIcon value="help" size="20" color="#E8503A" />
               </View>
-              <AtIcon value="chevron-right" size="16" color="#ccc" />
+              <Text className="menu-title">帮助与反馈</Text>
             </View>
-          ))}
+            <AtIcon value="chevron-right" size="16" color="#ccc" />
+          </View>
+          <View
+            className="menu-item"
+            onClick={() => {
+              Taro.showModal({
+                title: 'Choosy',
+                content: '让每一餐都值得期待 ✨\n\n版本：1.0.0',
+                showCancel: false,
+                confirmText: '知道了',
+              });
+            }}
+          >
+            <View className="menu-item-left">
+              <View className="menu-icon-wrapper">
+                <AtIcon value="alert-circle" size="20" color="#E8503A" />
+              </View>
+              <Text className="menu-title">关于我们</Text>
+            </View>
+            <AtIcon value="chevron-right" size="16" color="#ccc" />
+          </View>
         </View>
       </View>
 
-      {loggedIn && (
+      {isLoggedIn() && (
         <View className="logout-container">
           <View className="logout-btn" onClick={handleLogout}>
             <Text className="logout-text">退出当前账号</Text>

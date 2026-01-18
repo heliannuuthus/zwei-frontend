@@ -23,7 +23,7 @@ interface TokenResponse {
   expires_in: number;
 }
 
-// 用户信息类型（匹配后端 /api/profile 返回）
+// 用户信息类型（匹配后端 /api/user/profile 返回）
 export interface UserInfo {
   openid: string; // 系统生成的唯一标识（对外 ID）
   nickname?: string;
@@ -38,6 +38,8 @@ interface TokenRequestParams {
   code?: string; // grant_type=authorization_code 时使用
   refresh_token?: string; // grant_type=refresh_token 时使用
   idp?: string; // 身份提供方：wechat:mp, tt:mp, alipay:mp
+  nickname?: string; // 用户昵称（可选）
+  avatar?: string; // 用户头像 URL（可选）
 }
 
 /**
@@ -51,6 +53,8 @@ async function requestToken(
   if (params.code) formData.append('code', params.code);
   if (params.refresh_token)
     formData.append('refresh_token', params.refresh_token);
+  if (params.nickname) formData.append('nickname', params.nickname);
+  if (params.avatar) formData.append('avatar', params.avatar);
 
   const response = await Taro.request({
     url: `${apiConfig.API_BASE_URL}/api/token`,
@@ -186,7 +190,7 @@ export async function ensureValidToken(): Promise<string | null> {
 /**
  * 获取当前平台对应的 idp
  */
-function getCurrentPlatformIdP(): string {
+export function getCurrentPlatformIdP(): string {
   // Taro.getEnv() 返回 'WEAPP' | 'SWAN' | 'ALIPAY' | 'TT' | 'QQ' | 'JD' | 'H5' | 'RN'
   const env = Taro.getEnv();
 
@@ -215,6 +219,110 @@ function getCurrentPlatformIdP(): string {
 }
 
 /**
+ * 获取用户信息（抖音小程序）
+ * 抖音小程序需要使用 getUserProfile API 获取用户头像和昵称
+ */
+export async function getUserProfileForTT(): Promise<{
+  nickname: string;
+  avatar: string;
+  gender?: 0 | 1 | 2;
+} | null> {
+  try {
+    if (!Taro.canIUse('getUserProfile')) {
+      console.log('[Auth] 当前环境不支持 getUserProfile');
+      return null;
+    }
+
+    const env = Taro.getEnv();
+    if (env !== Taro.ENV_TYPE.TT) {
+      return null;
+    }
+
+    const res = await new Promise<any>((resolve, reject) => {
+      // @ts-ignore
+      Taro.getUserProfile({
+        desc: '用于完善用户资料',
+        success: resolve,
+        fail: reject,
+      });
+    });
+
+    if (res && res.userInfo) {
+      // 抖音小程序的 gender: 0-未知, 1-男, 2-女
+      const gender =
+        res.userInfo.gender !== undefined
+          ? (res.userInfo.gender as 0 | 1 | 2)
+          : undefined;
+
+      return {
+        nickname: res.userInfo.nickName || '',
+        avatar: res.userInfo.avatarUrl || '',
+        gender,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.log('[Auth] 获取用户信息失败（用户可能拒绝授权）:', error);
+    return null;
+  }
+}
+
+/**
+ * 获取用户信息（支付宝小程序）
+ * 支付宝小程序使用 getOpenUserInfo API 获取用户头像和昵称
+ */
+export async function getUserProfileForAlipay(): Promise<{
+  nickname: string;
+  avatar: string;
+  gender?: 0 | 1 | 2;
+} | null> {
+  try {
+    const env = Taro.getEnv();
+    if (env !== Taro.ENV_TYPE.ALIPAY) {
+      return null;
+    }
+
+    const res = await new Promise<any>((resolve, reject) => {
+      // @ts-ignore
+      Taro.getOpenUserInfo({
+        success: resolve,
+        fail: reject,
+      });
+    });
+
+    if (res && res.response) {
+      try {
+        const parsed = JSON.parse(res.response);
+        const userInfo = parsed.response || parsed;
+
+        // 支付宝小程序的 gender: "m"-男, "f"-女
+        let gender: 0 | 1 | 2 | undefined = undefined;
+        if (userInfo.gender === 'm') {
+          gender = 1;
+        } else if (userInfo.gender === 'f') {
+          gender = 2;
+        }
+
+        return {
+          nickname: userInfo.nickName || '',
+          avatar: userInfo.avatar || '',
+          gender,
+        };
+      } catch (parseErr) {
+        console.error('[Auth] 解析支付宝用户信息失败:', parseErr);
+        return null;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.log('[Auth] 获取用户信息失败（用户可能拒绝授权）:', error);
+    return null;
+  }
+}
+
+/**
  * 登录（自动检测平台）
  * 使用 OAuth2.1 风格的 /token 端点
  * code 格式：idp:actual_code，如 wechat:mp:xxx, tt:mp:xxx, alipay:mp:xxx
@@ -237,6 +345,7 @@ export async function wxLogin(): Promise<TokenResponse> {
     loginRes.code.length
   );
 
+  // 不再在登录时获取用户信息，改为在设置页面主动获取
   const response = await requestToken({
     grant_type: 'authorization_code',
     code: combinedCode,
@@ -286,7 +395,7 @@ export async function fetchProfile(): Promise<UserInfo | null> {
 
   // 请求 profile 接口
   try {
-    const profile = await request<UserInfo>('/api/profile');
+    const profile = await request<UserInfo>('/api/user/profile');
     saveUserInfo(profile);
     return profile;
   } catch (error) {
@@ -302,7 +411,6 @@ export async function updateProfile(data: {
   nickname?: string;
   avatar?: string;
   gender?: 0 | 1 | 2;
-  phone_code?: string; // 小程序授权码，用于绑定手机号；传空字符串表示解绑
 }): Promise<UserInfo | null> {
   // 没有 token 直接返回
   const token = getAccessToken();
@@ -319,7 +427,7 @@ export async function updateProfile(data: {
   }
 
   try {
-    const profile = await request<UserInfo>('/api/profile', {
+    const profile = await request<UserInfo>('/api/user/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -327,6 +435,42 @@ export async function updateProfile(data: {
     return profile;
   } catch (error) {
     console.error('[User] 更新 profile 失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 更新平台相关用户信息（根据不同的 idp 做不同的数据处理）
+ * @param idp 身份提供方：wechat:mp, tt:mp, alipay:mp
+ * @param phoneCode 小程序授权码（手机号）；传空字符串表示解绑
+ */
+export async function updateIdpProfile(
+  idp: string,
+  phoneCode: string
+): Promise<UserInfo | null> {
+  // 没有 token 直接返回
+  const token = getAccessToken();
+  if (!token) {
+    return null;
+  }
+
+  // 检查 token 是否过期，过期则刷新
+  if (isTokenExpiringSoon()) {
+    const refreshed = await refreshToken();
+    if (!refreshed) {
+      return null;
+    }
+  }
+
+  try {
+    const profile = await request<UserInfo>(`/api/${idp}/profile`, {
+      method: 'POST',
+      body: JSON.stringify({ phone_code: phoneCode }),
+    });
+    saveUserInfo(profile);
+    return profile;
+  } catch (error) {
+    console.error('[User] 绑定手机号失败:', error);
     throw error;
   }
 }
