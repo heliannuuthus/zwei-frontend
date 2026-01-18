@@ -22,9 +22,9 @@ export interface RecipeListItem {
 export interface RecipeIngredient {
   name: string;
   category?: string;
-  quantity?: number;
-  unit?: string;
-  text_quantity: string;
+  quantity?: number | null;
+  unit?: string | null;
+  text_quantity?: string; // 已废弃，使用 quantity + unit 拼接
   notes?: string;
 }
 

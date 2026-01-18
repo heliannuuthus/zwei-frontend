@@ -188,11 +188,13 @@ const ShoppingPage = () => {
 
       detail.ingredients.forEach(ing => {
         const key = ing.name;
-        let quantityText = ing.text_quantity;
-
-        if (ing.quantity && ratio !== 1) {
+        // 格式化数量显示：优先使用 quantity + unit，否则使用 text_quantity
+        let quantityText = '';
+        if (ing.quantity != null && ing.unit) {
           const scaledQty = ing.quantity * ratio;
-          quantityText = `${scaledQty % 1 === 0 ? scaledQty : scaledQty.toFixed(1)}${ing.unit || ''}`;
+          quantityText = `${scaledQty % 1 === 0 ? scaledQty : scaledQty.toFixed(1)}${ing.unit}`;
+        } else if (ing.text_quantity) {
+          quantityText = ing.text_quantity;
         }
 
         const source: IngredientSource = {

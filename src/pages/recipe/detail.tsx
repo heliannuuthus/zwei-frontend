@@ -290,9 +290,24 @@ const RecipeDetailPage = () => {
           </View>
           <View className="ingredients-grid">
             {recipe.ingredients.map((ingredient, index) => {
+              // 格式化数量显示：优先使用 quantity + unit，否则使用 text_quantity
+              const formatQuantity = () => {
+                if (ingredient.quantity != null && ingredient.unit) {
+                  const qty = ingredient.quantity;
+                  const formattedQty =
+                    qty % 1 === 0 ? qty.toString() : qty.toFixed(1);
+                  return `${formattedQty}${ingredient.unit}`;
+                }
+                if (ingredient.text_quantity) {
+                  return ingredient.text_quantity;
+                }
+                return '';
+              };
+
+              const quantityText = formatQuantity();
               // 内容过长时单独占一行
               const isWide =
-                ingredient.name.length + ingredient.text_quantity.length > 12 ||
+                ingredient.name.length + quantityText.length > 12 ||
                 (ingredient.notes && ingredient.notes.length > 10);
               const category = getIngredientCategory(ingredient.category);
               return (
@@ -306,9 +321,11 @@ const RecipeDetailPage = () => {
                       <Text className="ingredient-icon">{category.icon}</Text>
                       <Text className="ingredient-name">{ingredient.name}</Text>
                     </View>
-                    <Text className="ingredient-quantity">
-                      {ingredient.text_quantity}
-                    </Text>
+                    {quantityText && (
+                      <Text className="ingredient-quantity">
+                        {quantityText}
+                      </Text>
+                    )}
                   </View>
                   {ingredient.notes && (
                     <Text className="ingredient-notes">{ingredient.notes}</Text>
