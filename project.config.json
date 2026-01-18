@@ -1,8 +1,8 @@
 {
-  "miniprogramRoot": "dist/",
-  "projectname": "myApp",
+  "miniprogramRoot": "dist/weapp/",
+  "projectname": "择味",
   "description": "烹饪项目",
-  "appid": "wxe26f0b5a99b12e96",
+  "appid": "ttae6ed8d3300d352501",
   "setting": {
     "urlCheck": true,
     "es6": true,

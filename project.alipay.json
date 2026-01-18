@@ -1,0 +1,19 @@
+{
+  "format": 2,
+  "miniprogramRoot": "dist/alipay/",
+  "component2": true,
+  "axmlStrictCheck": false,
+  "enableHMR": true,
+  "enableNodeModuleBabelTransform": true,
+  "exclude": [
+    "src/**",
+    "node_modules/**",
+    "config/**",
+    "types/**",
+    "*.config.js",
+    "*.config.ts",
+    "tsconfig.json",
+    "babel.config.js",
+    "jest.config.ts"
+  ]
+}

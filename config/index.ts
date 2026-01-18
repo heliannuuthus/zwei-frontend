@@ -2,11 +2,16 @@ import { defineConfig, type UserConfigExport } from '@tarojs/cli';
 import devConfig from './dev';
 import prodConfig from './prod';
 
-const weappAppId = process.env.TARO_APP_WEAPP_APPID || 'wxe26f0b5a99b12e96';
-const ttAppId = process.env.TARO_APP_TT_APPID || '';
+// 微信小程序 AppID
+// 本地开发：使用 touristappid（测试号）
+// 生产环境：通过环境变量 TARO_APP_WEAPP_APPID 或 CI/CD 配置
+const weappAppId = process.env.TARO_APP_WEAPP_APPID || 'touristappid';
+// 抖音小程序 AppID（与后端 config.toml 中的 idps.tt.appid 保持一致）
+const ttAppId = process.env.TARO_APP_TT_APPID || 'ttae6ed8d3300d352501';
+// 支付宝小程序 AppID（与后端 config.toml 中的 idps.alipay.appid 保持一致）
 const alipayAppId = process.env.TARO_APP_ALIPAY_APPID || '';
 
-const ciPluginConfig = {
+const ciPluginConfig: any = {
   weapp: {
     appid: weappAppId,
     privateKeyPath: `key/private.${weappAppId}.key`,
@@ -14,21 +19,25 @@ const ciPluginConfig = {
       developer: process.env.WEAPP_DEVELOPER || 'heliannuuthus',
     },
   },
-  tt: ttAppId
-    ? {
-        email: process.env.TT_EMAIL || '',
-        password: process.env.TT_PASSWORD || '',
-        appid: ttAppId,
-      }
-    : undefined,
-  alipay: alipayAppId
-    ? {
-        appid: alipayAppId,
-        toolId: process.env.ALIPAY_TOOL_ID || '',
-        privateKeyPath: `key/private.${alipayAppId}.key`,
-      }
-    : undefined,
 };
+
+// 抖音小程序 CI 配置：只有当 appid、email 和 password 都配置时才启用
+if (ttAppId && process.env.TT_EMAIL && process.env.TT_PASSWORD) {
+  ciPluginConfig.tt = {
+    email: process.env.TT_EMAIL,
+    password: process.env.TT_PASSWORD,
+    appid: ttAppId,
+  };
+}
+
+// 支付宝小程序 CI 配置：只有当 appid 和 toolId 都配置时才启用
+if (alipayAppId && process.env.ALIPAY_TOOL_ID) {
+  ciPluginConfig.alipay = {
+    appid: alipayAppId,
+    toolId: process.env.ALIPAY_TOOL_ID,
+    privateKeyPath: `key/private.${alipayAppId}.key`,
+  };
+}
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
@@ -43,8 +52,11 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       828: 1.81 / 2,
     },
     sourceRoot: 'src',
-    outputRoot: 'dist',
+    outputRoot: `dist/${process.env.TARO_ENV}`,
     plugins: [['@tarojs/plugin-mini-ci', ciPluginConfig]],
+    // defineConstants 用于定义编译时常量（非环境变量）
+    // 环境变量通过 .env.* 文件配置，Taro 会自动注入到 process.env
+    // 参考：https://docs.taro.zone/docs/envs
     defineConstants: {},
     copy: {
       patterns: [],

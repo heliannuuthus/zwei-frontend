@@ -1,13 +1,62 @@
 {
-  "miniprogramRoot": "./",
-  "projectname": "myApp",
+  "miniprogramRoot": "dist/tt/",
+  "projectname": "择味",
   "description": "烹饪项目",
-  "appid": "touristappid",
+  "appid": "ttae6ed8d3300d352501",
   "setting": {
     "urlCheck": true,
-    "es6": false,
+    "es6": true,
+    "enhance": true,
     "postcss": false,
-    "minified": false
+    "minified": false,
+    "newFeature": true,
+    "autoAudits": false,
+    "coverView": true,
+    "showShadowRootInWxmlPanel": false,
+    "scopeDataCheck": false,
+    "useCompilerModule": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": false,
+    "minifyWXML": false,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
-  "compileType": "miniprogram"
+  "compileType": "miniprogram",
+  "simulatorType": "tt",
+  "simulatorPluginLibVersion": {},
+  "condition": {},
+  "packOptions": {
+    "ignore": [
+      "src/**",
+      "node_modules/**",
+      "config/**",
+      "types/**",
+      "*.config.js",
+      "*.config.ts",
+      "tsconfig.json",
+      "babel.config.js",
+      "jest.config.ts",
+      ".git/**",
+      ".github/**",
+      ".husky/**",
+      "scripts/**",
+      "README.md",
+      ".env*"
+    ],
+    "include": []
+  },
+  "editorSetting": {}
 }
