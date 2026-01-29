@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro';
-import apiConfigFile from '../config/api.config';
+import apiConfigFile, { getServiceUrl, apiEndpoints, type ServiceName } from '../config/api.config';
 
 // API配置
 interface ApiConfig {
@@ -89,7 +89,9 @@ async function request<T>(
   url: string,
   options: RequestInit & { timeout?: number } = {}
 ): Promise<T> {
-  const fullUrl = `${apiConfig.baseURL}${url}`;
+  // 根据 URL 路径动态获取对应服务的 baseURL
+  const { baseUrl, servicePath } = getServiceUrl(url);
+  const fullUrl = `${baseUrl}${servicePath}`;
 
   // 使用自定义超时时间，如果没有则使用默认值
   const timeout = options.timeout ?? apiConfig.timeout;
