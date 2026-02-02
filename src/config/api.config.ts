@@ -20,7 +20,7 @@ export interface ApiConfigExport {
 // 各服务的 API 基础路径配置
 export const apiEndpoints = {
   zwei: process.env.TARO_APP_API_ZWEI_URL || 'https://zwei.heliannuuthus.com/api',
-  auth: process.env.TARO_APP_API_AUTH_URL || 'https://auth.heliannuuthus.com/api',
+  auth: process.env.TARO_APP_API_AUTH_URL || 'https://aegis.heliannuuthus.com/api',
 } as const;
 
 export type ServiceName = keyof typeof apiEndpoints;

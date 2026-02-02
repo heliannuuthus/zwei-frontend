@@ -13,7 +13,7 @@ export default {
         },
         // Auth 认证服务
         '/auth': {
-          target: 'https://auth.heliannuuthus.com/api',
+          target: 'https://aegis.heliannuuthus.com/api',
           changeOrigin: true,
           pathRewrite: { '^/auth': '' },
         },
